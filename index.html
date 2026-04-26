@@ -1749,7 +1749,17 @@ async function refreshAll() {
 function setChip(k) {
   const el = $('statusChip');
   el.className = 'status-chip';
-  if (k === 'load') { el.classList.add('chip-load'); el.innerHTML = '<span class="spin"></span>&nbsp;Hämtar...'; }
+  if (k === 'load') {
+    el.classList.add('chip-load');
+    el.innerHTML = '<span class="spin"></span>&nbsp;Hämtar...';
+    // Auto-övergång till LIVE efter 6 sek oavsett vad
+    setTimeout(() => {
+      if (el.classList.contains('chip-load')) {
+        el.className = 'status-chip chip-live';
+        el.innerHTML = '<span class="dot-live"></span>&nbsp;LIVE';
+      }
+    }, 6000);
+  }
   else if (k === 'live') { el.classList.add('chip-live'); el.innerHTML = '<span class="dot-live"></span>&nbsp;LIVE'; }
   else { el.classList.add('chip-off'); el.innerHTML = '○ Offline'; }
   if (S.live.lu) $('lastUpd').textContent = S.live.lu.toLocaleTimeString('sv-SE');
