@@ -895,6 +895,11 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
         <div class="stat-card"><div class="stat-lbl">Kapital-effektivitet</div><div class="stat-val purple" id="capEff">—</div></div>
         <div class="stat-card"><div class="stat-lbl">Årsintäkt netto</div><div class="stat-val blue" id="annualNet">—</div></div>
         <div class="stat-card"><div class="stat-lbl">Rebalansering</div><div class="stat-val amber" id="rebal">—</div></div>
+        <div class="stat-card" style="border-color:rgba(0,214,143,.2);background:rgba(0,214,143,.04)">
+          <div class="stat-lbl">vs Sparkonto (0.5%)</div>
+          <div class="stat-val green" id="vsSavings">—</div>
+          <div style="font-size:10px;color:var(--txt3)" id="vsSavingsSub">—</div>
+        </div>
       </div>
       <div class="expert-only">
         <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Jämförelse</div>
@@ -1698,7 +1703,7 @@ function storePool(p) {
 
 // ── CONFIG ───────────────────────────────────────────────────
 const PAIRS = {
-  WETH: { cg:'ethereum',    dvol:.040, v2tvl:.85, fee:.0005, dp:2200,
+  WETH: { cg:'ethereum',    dvol:.040, v2tvl:.85, fee:.0005, dp:2350,
     lf: p => p.project?.includes('uniswap') && p.symbol?.includes('WETH') && p.symbol?.includes('USDC') },
   zkSync:  [{ name:'SyncSwap', icon:'⚡', url:'https://syncswap.xyz', fees:['0.05%','0.30%'], tvl:'$20M+' },
                { name:'Uniswap V3', icon:'🦄', url:'https://app.uniswap.org/pools', fees:['0.05%'], tvl:'$15M+' }],
@@ -1706,7 +1711,7 @@ const PAIRS = {
                { name:'Uniswap V3', icon:'🦄', url:'https://app.uniswap.org/pools', fees:['0.05%'], tvl:'$8M+' }],
   Blast:   [{ name:'Thruster Finance', icon:'💥', url:'https://app.thruster.finance', fees:['0.30%'], tvl:'$12M+' },
                { name:'Uniswap V3', icon:'🦄', url:'https://app.uniswap.org/pools', fees:['0.05%'], tvl:'$8M+' }],
-  WBTC: { cg:'wrapped-bitcoin', dvol:.032, v2tvl:.55, fee:.003, dp:68000,
+  WBTC: { cg:'wrapped-bitcoin', dvol:.032, v2tvl:.55, fee:.003, dp:78000,
     lf: p => p.project?.includes('uniswap') && p.symbol?.includes('WBTC') && p.symbol?.includes('USDC') },
   SOL:  { cg:'solana',      dvol:.055, v2tvl:1.10, fee:.0025, dp:150,
     lf: p => (p.project==='orca'||p.project==='raydium') && p.symbol?.includes('SOL') && p.symbol?.includes('USDC') },
@@ -3662,7 +3667,7 @@ self.addEventListener('fetch', e => {
 // INIT: Visa sidan DIREKT med fallback-data — ingen väntan
 (function initApp() {
   // Sätt fallback-priser synkront — sidan är klar på 0ms
-  S.live.prices  = { WETH:2200, WBTC:68000, SOL:150, SUI:3.2, ARB:1.1, OP:2.0, AVAX:35, LINK:14 };
+  S.live.prices  = { WETH:2350, WBTC:78000, SOL:87, SUI:0.95, ARB:0.13, OP:0.13, AVAX:9.5, LINK:9.5 };
   S.live.changes = { WETH:1.2, WBTC:0.8, SOL:2.1, SUI:-0.5, ARB:1.5, OP:0.9, AVAX:1.1, LINK:0.7 };
   S.live.vols    = { WETH:0.040, WBTC:0.032, SOL:0.055, SUI:0.070, ARB:0.065, OP:0.060, AVAX:0.055, LINK:0.045 };
   S.live.lu      = new Date();
