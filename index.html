@@ -218,6 +218,72 @@ select option{background:var(--bg2)}
 .ticker{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px}
 @media(max-width:900px){.ticker{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:520px){.ticker{grid-template-columns:repeat(2,1fr)}}
+
+/* ═══ MOBILOPTIMERING ══════════════════════════════════════ */
+@media(max-width:768px){
+  /* Nav — scrollbar på mobil */
+  .nav{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 8px;gap:4px}
+  .nav::-webkit-scrollbar{display:none}
+  .nav-btn{flex-shrink:0;font-size:11px;padding:8px 10px;gap:4px}
+  .nav-label{font-size:10px}
+
+  /* Header */
+  header{padding:10px 12px}
+  .header-right{gap:8px}
+  #connectBtn{padding:7px 12px;font-size:12px}
+
+  /* Mode bar */
+  .mode-bar{flex-direction:column;gap:10px;align-items:flex-start}
+
+  /* Kalkylator — stack på mobil */
+  .calc-grid{grid-template-columns:1fr !important}
+  .pair-grid{grid-template-columns:repeat(2,1fr)}
+  .risk-grid{grid-template-columns:1fr}
+
+  /* Panels */
+  .panel{padding:12px}
+
+  /* Pool tabell — horisontell scroll */
+  .pool-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .pool-table{min-width:700px}
+
+  /* Hot hero cards */
+  .hot-hero{grid-template-columns:1fr !important}
+
+  /* Simulator modal */
+  .sim-modal{width:95vw;max-width:none;margin:10px}
+
+  /* Wallet modal */
+  .wallet-modal{width:95vw;max-width:none}
+
+  /* Guide steps */
+  .guide-steps{grid-template-columns:1fr}
+  .guide-glossary{grid-template-columns:1fr}
+  .guide-cta-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Ticker */
+  .ticker{grid-template-columns:repeat(3,1fr)}
+
+  /* Result cards */
+  .result-grid{grid-template-columns:1fr !important}
+  .kpi-grid{grid-template-columns:repeat(2,1fr) !important}
+
+  /* Aave cards */
+  .aave-grid{grid-template-columns:1fr !important}
+
+  /* Avkastningsmål */
+  .goal-grid{grid-template-columns:1fr !important}
+
+  /* Touch-friendly buttons */
+  button, .btn{min-height:44px}
+  .nav-btn{min-height:44px}
+}
+
+@media(max-width:400px){
+  .ticker{grid-template-columns:repeat(2,1fr)}
+  .nav-btn .nav-label{display:none}
+  .nav-btn span:first-child{font-size:18px}
+}
 .tick{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;transition:all .2s}
 .tick:hover{border-color:var(--border2)}
 .tick-sym{font-size:10px;color:var(--txt3);font-weight:600;letter-spacing:.5px}
@@ -1772,12 +1838,66 @@ function setChip(k) {
   if (S.live.lu) $('lastUpd').textContent = S.live.lu.toLocaleTimeString('sv-SE');
 }
 async function fetchPrices() {
-  const ids = [...new Set(Object.values(PAIRS).map(p => p.cg))].join(',');
-  const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true');
-  const d = await r.json();
-  for (const [k, pair] of Object.entries(PAIRS)) {
-    const x = d[pair.cg];
-    if (x) { S.live.prices[k] = x.usd; S.live.changes[k] = x.usd_24h_change; }
+  // Binance API — ingen nyckel, ingen rate-limit, live tick-data
+  const BINANCE_SYMBOLS = {
+    WETH: 'ETHUSDT',
+    WBTC: 'BTCUSDT',
+    SOL:  'SOLUSDT',
+    SUI:  'SUIUSDT',
+    ARB:  'ARBUSDT',
+    OP:   'OPUSDT',
+    AVAX: 'AVAXUSDT',
+    LINK: 'LINKUSDT'
+  };
+  try {
+    // Hämta alla priser i ett enda anrop via bookTicker (snabbast)
+    const symbols = Object.values(BINANCE_SYMBOLS).map(s => '"' + s + '"').join(',');
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=[' + symbols + ']', { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (!r.ok) throw new Error('Binance HTTP ' + r.status);
+    const data = await r.json();
+    // Bygg en lookup-tabell symbol→data
+    const lookup = {};
+    data.forEach(t => { lookup[t.symbol] = t; });
+    // Uppdatera S.live
+    for (const [key, binSym] of Object.entries(BINANCE_SYMBOLS)) {
+      const t = lookup[binSym];
+      if (t) {
+        S.live.prices[key]  = parseFloat(t.lastPrice);
+        S.live.changes[key] = parseFloat(t.priceChangePercent);
+      }
+    }
+    S.live.lu = new Date();
+    // Uppdatera UI
+    renderTicker();
+    if ($('priceHint')) $('priceHint').textContent = '✓ Live Binance';
+    Object.keys(BINANCE_SYMBOLS).forEach(k => {
+      const el = $('pp-' + k);
+      if (el && S.live.prices[k]) el.textContent = fmtP(S.live.prices[k]);
+    });
+    const p = S.live.prices[S.pair];
+    const cp = $('currentPrice');
+    if (cp && p) cp.value = p > 100 ? p.toFixed(2) : p.toFixed(4);
+  } catch(e) {
+    console.warn('Binance fetch failed:', e.message);
+    // Fallback till CoinGecko om Binance misslyckas
+    try {
+      const ids = [...new Set(Object.values(PAIRS).map(p => p.cg))].join(',');
+      const ctrl2 = new AbortController();
+      const tid2 = setTimeout(() => ctrl2.abort(), 5000);
+      const r2 = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true', { signal: ctrl2.signal });
+      clearTimeout(tid2);
+      if (r2.ok) {
+        const d = await r2.json();
+        for (const [k, pair] of Object.entries(PAIRS)) {
+          const x = d[pair.cg];
+          if (x) { S.live.prices[k] = x.usd; S.live.changes[k] = x.usd_24h_change || 0; }
+        }
+        if ($('priceHint')) $('priceHint').textContent = '✓ Live CoinGecko (backup)';
+      }
+    } catch(e2) { /* använder fallback-priser */ }
   }
 }
 async function fetchVols() {
@@ -2767,6 +2887,26 @@ document.addEventListener('keydown', e => {
 $('simOverlay').addEventListener('click', e => { if (e.target === $('simOverlay')) closeSim(); });
 $('walletOverlay').addEventListener('click', e => { if (e.target === $('walletOverlay')) closeWallet(); });
 
+// ── MOBIL TOUCH FÖRBÄTTRINGAR ────────────────────────────────
+(function initMobile() {
+  // Förhindra zoom på input-focus (iOS)
+  document.querySelectorAll('input, select').forEach(el => {
+    el.style.fontSize = '16px';
+  });
+  // Lägg till touch-klass på body om mobil
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    document.body.classList.add('is-touch');
+  }
+  // Smooth scroll på nav
+  const nav = document.querySelector('.nav');
+  if (nav) {
+    nav.style.scrollBehavior = 'smooth';
+    // Scrolla aktiv flik i vy
+    const activeBtn = nav.querySelector('.nav-btn.active');
+    if (activeBtn) activeBtn.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+})();
+
 // ── GUIDE TOGGLE ─────────────────────────────────────────────
 function toggleGuide(head) {
   const body = head.nextElementSibling;
@@ -2832,7 +2972,12 @@ function toggleGuide(head) {
 })();
 
 // Auto-refresh var 2:e minut
-setInterval(() => { refreshAll(); }, 120000);
+// Uppdatera priser var 30:e sekund med Binance live-data
+setInterval(() => { fetchPrices(); }, 30000);
+// Full refresh (pooler etc.) var 2:e minut
+setInterval(() => {
+  fetchLlama();
+}, 120000);
 </script>
 </body>
 </html>
