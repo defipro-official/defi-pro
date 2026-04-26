@@ -756,6 +756,7 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
     </div>
   </div>
   <div class="header-right">
+    <button onclick="shareApp()" title="Dela DeFi Pro" style="background:none;border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;cursor:pointer;font-size:14px;color:var(--txt3);transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--txt3)'">🔗</button>
     <div class="status-chip chip-live" id="statusChip"><span class="dot-live"></span>&nbsp;LIVE</div>
     <span style="font-size:10px;color:var(--txt3);font-family:var(--mono)" id="lastUpd">—</span>
     <button class="btn btn-ghost btn-sm btn-icon" onclick="refreshAll()" title="Uppdatera">↻</button>
@@ -1613,6 +1614,38 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
 
     <div class="guide-card">
       <div class="guide-card-head" onclick="toggleGuide(this)">
+        <span>📉 Vad är Impermanent Loss och hur använder jag IL-kalkylatorn?</span>
+        <span class="guide-faq-icon">›</span>
+      </div>
+      <div class="guide-card-body">
+        <p><strong>Impermanent Loss (IL)</strong> är den potentiella förlust du gör som LP jämfört med att bara hålla tokens. Den uppstår när priset på ett token rör sig relativt det andra.</p>
+        <ul>
+          <li><strong>IL-kalkylatorn</strong> (fliken "IL & Hedge"): Ange ingångspris och nuvarande pris → du ser exakt hur mycket du förlorat i % och USD</li>
+          <li><strong>Break-even APR</strong>: Visar hur höga fees du behöver tjäna för att täcka IL</li>
+          <li><strong>Grafen</strong>: Visar IL vid olika prisrörelser — ju mer priset rör sig, desto högre IL</li>
+        </ul>
+        <div class="tip">💡 <strong>Regel:</strong> Välj par med hög handelsvolym och låg priskorrelation (t.ex. ETH/USDC) för att maximera fees relativt IL.</div>
+      </div>
+    </div>
+
+    <div class="guide-card">
+      <div class="guide-card-head" onclick="toggleGuide(this)">
+        <span>🛡️ Vad är hedging och hur skyddar jag min position?</span>
+        <span class="guide-faq-icon">›</span>
+      </div>
+      <div class="guide-card-body">
+        <p><strong>Hedging</strong> innebär att du tar en motsatt position för att skydda dig mot prisrörelser. Som LP kan du shorta Token A för att bli delta-neutral.</p>
+        <ul>
+          <li><strong>Delta-neutral:</strong> Shorta 50% av din Token A-exponering på GMX eller dYdX → prisrörelse påverkar dig minimalt</li>
+          <li><strong>50% hedge:</strong> Partiellt skydd — billigare men du har kvar viss prisexponering</li>
+          <li><strong>Full hedge:</strong> Maximalt skydd men högst kostnad</li>
+        </ul>
+        <div class="tip">💡 <strong>Kostnad:</strong> Hedging kostar ca 0.01%/dag i funding rate. På en $10 000-position = $1/dag. Värt det om du har aggressiv risk-nivå.</div>
+      </div>
+    </div>
+
+    <div class="guide-card">
+      <div class="guide-card-head" onclick="toggleGuide(this)">
         <span>Hur ofta behöver jag rebalansera?</span>
         <span class="guide-faq-icon">›</span>
       </div>
@@ -1635,7 +1668,16 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
 </div><!-- end panel-guide -->
 
 </div><!-- end .wrap -->
-<footer>Live: CoinGecko · DefiLlama · Alternative.me · Aave V3 Subgraph &nbsp;|&nbsp; Körs lokalt &nbsp;|&nbsp; Ej finansiell rådgivning</footer>
+<footer>
+  <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin-bottom:8px;font-size:11px">
+    <span>📡 Live: Binance · DefiLlama · Alternative.me · Aave V3</span>
+    <span>|</span>
+    <span>🌐 <a href="https://defipro-official.github.io/defi-pro/" style="color:var(--blue)" target="_blank">defipro-official.github.io</a></span>
+    <span>|</span>
+    <span>v2.0 · April 2026</span>
+  </div>
+  <div style="font-size:10px;color:var(--txt3)">⚠️ Ej finansiell rådgivning · DeFi innebär alltid risk · Gör alltid din egen research</div>
+</footer>
 <script>
 // ═══════════════════════════════════════════════════════════
 // DeFi Pro v8 — Komplett JavaScript
@@ -3516,6 +3558,29 @@ function calcHedge() {
 
 // Initiera IL-tabell vid sidladdning
 setTimeout(renderILTable, 500);
+
+// ── DELA-FUNKTION ─────────────────────────────────────────────
+async function shareApp() {
+  const shareData = {
+    title: 'DeFi Pro — DeFi made simple',
+    text: 'Beräkna din DeFi-avkastning, hitta heta pooler och övervaka positioner. Gratis!',
+    url: 'https://defipro-official.github.io/defi-pro/'
+  };
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+    } else {
+      await navigator.clipboard.writeText(shareData.url);
+      const btn = document.querySelector('[onclick="shareApp()"]');
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = '✅';
+        btn.style.color = 'var(--green)';
+        setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+      }
+    }
+  } catch(e) {}
+}
 
 // ── MOBIL TOUCH FÖRBÄTTRINGAR ────────────────────────────────
 (function initMobile() {
