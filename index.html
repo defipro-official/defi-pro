@@ -519,46 +519,7 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 </style>
-<!-- Reown AppKit (WalletConnect) via CDN -->
-<script type="module">
-  // AppKit laddas som ES-modul vid behov via openWallet()
-  // Project ID hämtas från localStorage om användaren angett det
-  window._appkitReady = false;
-  window._appkitModal = null;
-
-  async function initAppKit() {
-    if (window._appkitReady) return;
-    const projectId = localStorage.getItem('wcProjectId') || 'demo';
-    if (projectId === 'demo') return; // demo-läge, ingen riktig anslutning
-    try {
-      const { createAppKit } = await import('https://cdn.jsdelivr.net/npm/@reown/appkit@1.6.8/dist/exports/index.js');
-      const { EthersAdapter } = await import('https://cdn.jsdelivr.net/npm/@reown/appkit-adapter-ethers@1.6.8/dist/exports/index.js');
-      const adapter = new EthersAdapter();
-      window._appkitModal = createAppKit({
-        adapters: [adapter],
-        projectId,
-        networks: ['eip155:1','eip155:42161','eip155:8453','eip155:10'],
-        metadata: {
-          name: 'DeFi Pro',
-          description: 'DeFi made simple',
-          url: location.origin,
-          icons: ['https://defipro.io/icon.png']
-        },
-        features: { analytics: false }
-      });
-      window._appkitReady = true;
-    } catch(e) {
-      console.warn('AppKit init failed:', e.message);
-    }
-  }
-
-  window.openAppKit = async function() {
-    await initAppKit();
-    if (window._appkitModal) {
-      window._appkitModal.open();
-    }
-  };
-</script>
+<!-- AppKit laddas vid behov -->
 </head>
 <body class="beginner">
 <!-- WALLET MODAL — WalletConnect AppKit + direktanslutning -->
@@ -1754,8 +1715,17 @@ function useWalletAave() { $('aaveAddr').value = wallet.addr; loadAave(); }
 // ── LIVE DATA ────────────────────────────────────────────────
 async function refreshAll() {
   setChip('load');
+  // Timeout-wrapper: om API inte svarar inom 10 sek → visa ändå
+  const withTimeout = (promise, ms) => Promise.race([
+    promise,
+    new Promise(resolve => setTimeout(resolve, ms))
+  ]);
   try {
-    await Promise.all([fetchPrices(), fetchVols(), fetchLlama()]);
+    await Promise.all([
+      withTimeout(fetchPrices(), 8000),
+      withTimeout(fetchVols(), 8000),
+      withTimeout(fetchLlama(), 8000)
+    ]);
     S.live.lu = new Date();
     setChip('live');
     renderTicker();
@@ -1763,7 +1733,12 @@ async function refreshAll() {
     if (p) { $('currentPrice').value = p > 100 ? p.toFixed(2) : p.toFixed(4); $('priceHint').textContent = '✓ Live CoinGecko'; }
     if (S.live.vols[S.pair]) { $('liveVol').textContent = (S.live.vols[S.pair]*100).toFixed(2) + '% daglig'; $('liveVolHint').textContent = 'Live 30d historik'; }
     Object.keys(PAIRS).forEach(k => { const el = $('pp-' + k); if (el && S.live.prices[k]) el.textContent = fmtP(S.live.prices[k]); });
-  } catch(e) { setChip('off'); }
+  } catch(e) {
+    console.warn('refreshAll error:', e.message);
+    setChip('off');
+    // Visa ändå sidan — fungerar utan live-data
+    $('statusChip').title = 'API-fel: ' + e.message + '. Vissa funktioner kräver live-data.';
+  }
 }
 function setChip(k) {
   const el = $('statusChip');
