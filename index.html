@@ -2642,43 +2642,85 @@ async function fetchDeFiTVL() {
 }
 
 // ── AAVE ─────────────────────────────────────────────────────
+// Aave V3 subgraph endpoints per kedja
+const AAVE_SUBGRAPHS = {
+  ethereum: 'https://gateway.thegraph.com/api/public/subgraphs/id/Cd2gEDVeqnjBn1hSeqFMitw8Q1iiyV9FYUZkLNRcL87g',
+  arbitrum: 'https://gateway.thegraph.com/api/public/subgraphs/id/4xyasjQeREe7PxnF6wVdobZvCw5mhoHZq3T7guRpuNPf',
+  base:     'https://gateway.thegraph.com/api/public/subgraphs/id/GQFbb95cE6d8mV989mL5figjaGaKCQB3xqYrr1bRyXqF'
+};
+
+async function queryAaveChain(url, addr) {
+  const q = '{userReserves(where:{user:"' + addr + '"},first:50){reserve{symbol decimals liquidityRate variableBorrowRate}currentATokenBalance currentTotalDebt}user(id:"' + addr + '"){healthFactor}}';
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), 8000);
+  const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query:q}), signal:ctrl.signal });
+  clearTimeout(tid);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return await r.json();
+}
+
 async function loadAave() {
-  const addr = $('aaveAddr').value.trim();
-  if (!addr || !addr.startsWith('0x') || addr.length < 40) { $('aaveContent').innerHTML = '<div style="color:var(--red)">⚠ Ange giltig 0x-adress.</div>'; return; }
-  $('aaveContent').innerHTML = '<span class="spin"></span> Hämtar...';
-  $('aaveSumGrid').classList.add('hidden');
-  try {
-    const q = `{userReserves(where:{user:"${addr.toLowerCase()}"},first:20){reserve{symbol decimals liquidityRate variableBorrowRate}currentATokenBalance currentTotalDebt}user(id:"${addr.toLowerCase()}"){healthFactor}}`;
-    const r = await fetch('https://gateway.thegraph.com/api/public/subgraphs/id/Cd2gEDVeqnjBn1hSeqFMitw8Q1iiyV9FYUZkLNRcL87g', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query:q}) });
-    const j = await r.json();
-    if (j?.data?.userReserves?.length > 0) renderAaveData(j.data);
-    else renderAaveDemo();
-  } catch(e) { renderAaveDemo(); }
-}
-function renderAaveData(data) {
-  const res = data.userReserves || [];
-  let ts = 0, tb = 0, html = '';
-  for (const ur of res) {
-    const sym = ur.reserve.symbol, dec = ur.reserve.decimals || 18;
-    const sup = parseFloat(ur.currentATokenBalance)/10**dec;
-    const bor = parseFloat(ur.currentTotalDebt)/10**dec;
-    const sr  = parseFloat(ur.reserve.liquidityRate)/1e27*100;
-    const br  = parseFloat(ur.reserve.variableBorrowRate)/1e27*100;
-    const px  = S.live.prices[sym] || 1;
-    if (sup > .001) { ts += sup*px; html += aCard(sym, 'supply', sup, sup*px, sr); }
-    if (bor > .001) { tb += bor*px; html += aCard(sym, 'borrow', bor, bor*px, br); }
+  const addr = ($('aaveAddr').value || '').trim().toLowerCase();
+  if (!addr || !addr.startsWith('0x') || addr.length < 40) {
+    $('aaveContent').innerHTML = '<div style="color:var(--amber);padding:14px;background:var(--bg2);border-radius:var(--r);border:1px solid rgba(255,170,51,.2)">⚠ Ange en giltig Ethereum-adress (börjar med 0x)</div>';
+    return;
   }
-  const hf = data.user?.healthFactor ? parseFloat(data.user.healthFactor)/1e18 : null;
-  showAaveSum(ts, tb, hf);
-  $('aaveContent').innerHTML = html || '<div style="color:var(--txt3)">Inga aktiva positioner.</div>';
-}
-function renderAaveDemo() {
-  showAaveSum(52340, 18200, 2.41);
-  $('aaveContent').innerHTML =
-    aCard('WETH','supply',12.5,27500,1.8,true) +
-    aCard('USDC','supply',24840,24840,4.2,true) +
-    aCard('USDT','borrow',18200,18200,5.1,true) +
-    '<div class="warn-box" style="margin-top:10px;font-size:12px">⚠ Demo-data — subgraph svarade inte.</div>';
+  $('aaveContent').innerHTML = '<div style="text-align:center;padding:32px"><span class="spin" style="width:24px;height:24px;border-width:3px"></span><div style="margin-top:12px;font-weight:600">Söker positioner...</div><div style="font-size:12px;color:var(--txt3);margin-top:4px">Kollar Ethereum, Arbitrum & Base</div></div>';
+  $('aaveSumGrid').classList.add('hidden');
+
+  const chains = [
+    { name: 'Ethereum', url: AAVE_SUBGRAPHS.ethereum, color: 'var(--blue)' },
+    { name: 'Arbitrum', url: AAVE_SUBGRAPHS.arbitrum, color: '#28a0f0' },
+    { name: 'Base',     url: AAVE_SUBGRAPHS.base,     color: '#0052ff' }
+  ];
+
+  const results = await Promise.allSettled(chains.map(ch =>
+    queryAaveChain(ch.url, addr).then(d => ({ ...ch, data: d }))
+  ));
+
+  let allHtml = '', ts = 0, tb = 0, hf = null, chainsFound = [];
+
+  for (const r of results) {
+    if (r.status !== 'fulfilled') continue;
+    const { name, color, data } = r.value;
+    const reserves = data?.data?.userReserves || [];
+    const user = data?.data?.user;
+    if (reserves.length === 0) continue;
+    chainsFound.push(name);
+    if (user?.healthFactor) hf = parseFloat(user.healthFactor) / 1e18;
+
+    allHtml += '<div style="font-size:11px;font-weight:700;color:' + color + ';text-transform:uppercase;letter-spacing:.8px;margin:14px 0 8px;display:flex;align-items:center;gap:7px"><span style="width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block"></span>' + name + '</div>';
+
+    for (const ur of reserves) {
+      const sym = ur.reserve.symbol, dec = parseInt(ur.reserve.decimals)||18;
+      const sup = parseFloat(ur.currentATokenBalance)/10**dec;
+      const bor = parseFloat(ur.currentTotalDebt)/10**dec;
+      const sr  = parseFloat(ur.reserve.liquidityRate)/1e27*100;
+      const br  = parseFloat(ur.reserve.variableBorrowRate)/1e27*100;
+      const px  = S.live.prices[sym] || S.live.prices['W'+sym] || 1;
+      if (sup > 0.0001) { ts += sup*px; allHtml += aCard(sym,'supply',sup,sup*px,sr); }
+      if (bor > 0.0001) { tb += bor*px; allHtml += aCard(sym,'borrow',bor,bor*px,br); }
+    }
+  }
+
+  if (chainsFound.length === 0) {
+    $('aaveContent').innerHTML = '<div style="text-align:center;padding:32px;background:var(--bg2);border-radius:var(--r2);border:1px solid var(--border)"><div style="font-size:36px;margin-bottom:12px">🏦</div><div style="font-size:15px;font-weight:700;margin-bottom:8px">Inga Aave V3-positioner hittades</div><div style="font-size:13px;color:var(--txt2);line-height:1.7;margin-bottom:16px">Adressen <code style="background:var(--bg3);padding:1px 7px;border-radius:4px">' + addr.slice(0,6) + '...' + addr.slice(-4) + '</code> har inga aktiva positioner på Ethereum, Arbitrum eller Base.</div><a href="https://app.aave.com" target="_blank" class="btn btn-primary" style="display:inline-flex">Öppna Aave ↗</a></div>';
+    return;
+  }
+
+  $('aaveContent').innerHTML = allHtml;
+  $('aaveTotalSupply').textContent = '$' + ts.toLocaleString('sv-SE',{maximumFractionDigits:0});
+  $('aaveTotalBorrow').textContent = '$' + tb.toLocaleString('sv-SE',{maximumFractionDigits:0});
+  $('aaveNetWorth').textContent = '$' + (ts-tb).toLocaleString('sv-SE',{maximumFractionDigits:0});
+  const hfEl = $('aaveHealthFactor');
+  if (hfEl && hf) {
+    const hfColor = hf > 2 ? 'var(--green)' : hf > 1.5 ? 'var(--amber)' : 'var(--red)';
+    const hfIcon = hf > 2 ? '✅' : hf > 1.5 ? '⚠️' : '🔴';
+    hfEl.innerHTML = '<span style="color:' + hfColor + '">' + hfIcon + ' ' + hf.toFixed(2) + '</span>';
+  }
+  const cEl = $('aaveChainsFound');
+  if (cEl) cEl.textContent = 'Kedjor: ' + chainsFound.join(', ');
+  $('aaveSumGrid').classList.remove('hidden');
 }
 function aCard(sym, type, amt, usd, apy, demo=false) {
   const isS = type === 'supply';
