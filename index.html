@@ -2953,7 +2953,7 @@ async function fetchPoolHistory(poolId) {
 }
 
 function showPoolHistory(poolId, poolName) {
-  const modal = document.getElementById(&quot;historyModal&quot;);
+  const modal = document.getElementById('historyModal');
   if (!modal) {
     // Skapa modal
     const m = document.createElement('div');
@@ -2962,18 +2962,18 @@ function showPoolHistory(poolId, poolName) {
     m.innerHTML = '<div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--r3);padding:24px;width:100%;max-width:600px;max-height:80vh;overflow-y:auto">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">' +
       '<div style="font-size:16px;font-weight:700" id="historyTitle">APY-historik</div>' +
-      '<button onclick="document.getElementById(&quot;historyModal&quot;).remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--txt3)">✕</button>' +
+      '<button onclick="document.getElementById('historyModal').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--txt3)">✕</button>' +
       '</div>' +
       '<div id="historyContent"><span class="spin"></span> Hämtar historik...</div>' +
       '</div>';
     document.body.appendChild(m);
   }
-  document.getElementById(&quot;historyTitle&quot;).textContent = '📈 APY-historik: ' + poolName;
-  document.getElementById(&quot;historyContent&quot;).innerHTML = '<div style="text-align:center;padding:20px"><span class="spin"></span><div style="margin-top:8px;color:var(--txt3)">Hämtar 30 dagars data...</div></div>';
+  document.getElementById('historyTitle').textContent = '📈 APY-historik: ' + poolName;
+  document.getElementById('historyContent').innerHTML = '<div style="text-align:center;padding:20px"><span class="spin"></span><div style="margin-top:8px;color:var(--txt3)">Hämtar 30 dagars data...</div></div>';
   
   fetchPoolHistory(poolId).then(data => {
     if (!data.length) {
-      document.getElementById(&quot;historyContent&quot;).innerHTML = '<div style="color:var(--txt3);text-align:center;padding:20px">Ingen historisk data tillgänglig för denna pool.</div>';
+      document.getElementById('historyContent').innerHTML = '<div style="color:var(--txt3);text-align:center;padding:20px">Ingen historisk data tillgänglig för denna pool.</div>';
       return;
     }
     const avgApy = (data.reduce((s,d) => s + (d.apy||0), 0) / data.length).toFixed(2);
@@ -2990,11 +2990,11 @@ function showPoolHistory(poolId, poolName) {
     html += '<canvas id="apyHistChart" width="550" height="180" style="width:100%;background:var(--bg2);border-radius:var(--r)"></canvas>';
     html += '<div style="margin-top:12px;font-size:12px;color:var(--txt3)">Data från DefiLlama · Senaste 30 dagarna</div>';
     
-    document.getElementById(&quot;historyContent&quot;).innerHTML = html;
+    document.getElementById('historyContent').innerHTML = html;
     
     // Rita graf
     setTimeout(() => {
-      const canvas = document.getElementById(&quot;apyHistChart&quot;);
+      const canvas = document.getElementById('apyHistChart');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       const W = canvas.width, H = canvas.height;
@@ -3243,13 +3243,13 @@ async function loadOnchain() {
 }
 
 function saveAlchemyKey() {
-  const val = (document.getElementById(&quot;alchemyKeyInput&quot;)?.value || '').trim();
+  const val = (document.getElementById('alchemyKeyInput')?.value || '').trim();
   if (!val || val.includes('•')) return;
   localStorage.setItem('alchemyKey', val);
   const hint = document.createElement('div');
   hint.style.cssText = 'color:var(--green);font-size:12px;margin-top:6px';
   hint.textContent = '✅ API-nyckel sparad! Laddar om positioner...';
-  document.getElementById(&quot;alchemyKeyInput&quot;).parentElement.after(hint);
+  document.getElementById('alchemyKeyInput').parentElement.after(hint);
   setTimeout(() => loadOnchain(), 1000);
 }
 
@@ -3327,7 +3327,7 @@ function renderILTable() {
     { ratio: 4.0,  label: '+300% / -75%' },
     { ratio: 5.0,  label: '+400% / -80%' },
   ];
-  const tbody = document.getElementById(&quot;ilTable&quot;);
+  const tbody = document.getElementById('ilTable');
   if (!tbody) return;
   tbody.innerHTML = rows.map(r => {
     const il = (2 * Math.sqrt(r.ratio) / (1 + r.ratio) - 1) * 100;
@@ -3348,26 +3348,26 @@ function renderILTable() {
 function ilFillLive() {
   const p = S.live.prices['WETH'];
   if (p) {
-    document.getElementById(&quot;ilPriceA1&quot;).value = p.toFixed(2);
-    if (!document.getElementById(&quot;ilPriceA0&quot;).value) {
-      document.getElementById(&quot;ilPriceA0&quot;).value = (p * 0.8).toFixed(2);
+    document.getElementById('ilPriceA1').value = p.toFixed(2);
+    if (!document.getElementById('ilPriceA0').value) {
+      document.getElementById('ilPriceA0').value = (p * 0.8).toFixed(2);
     }
   }
-  document.getElementById(&quot;ilPriceB0&quot;).value = '1';
-  document.getElementById(&quot;ilPriceB1&quot;).value = '1';
+  document.getElementById('ilPriceB0').value = '1';
+  document.getElementById('ilPriceB1').value = '1';
 }
 
 function hedgeFillLive() {
   const p = S.live.prices['WETH'];
-  if (p) document.getElementById(&quot;hedgePrice&quot;).value = p.toFixed(2);
+  if (p) document.getElementById('hedgePrice').value = p.toFixed(2);
 }
 
 function calcIL() {
-  const p0a = parseFloat(document.getElementById(&quot;ilPriceA0&quot;).value);
-  const p1a = parseFloat(document.getElementById(&quot;ilPriceA1&quot;).value);
-  const p0b = parseFloat(document.getElementById(&quot;ilPriceB0&quot;).value) || 1;
-  const p1b = parseFloat(document.getElementById(&quot;ilPriceB1&quot;).value) || 1;
-  const capital = parseFloat(document.getElementById(&quot;ilCapital&quot;).value) || 10000;
+  const p0a = parseFloat(document.getElementById('ilPriceA0').value);
+  const p1a = parseFloat(document.getElementById('ilPriceA1').value);
+  const p0b = parseFloat(document.getElementById('ilPriceB0').value) || 1;
+  const p1b = parseFloat(document.getElementById('ilPriceB1').value) || 1;
+  const capital = parseFloat(document.getElementById('ilCapital').value) || 10000;
 
   if (!p0a || !p1a) { alert('Ange ingångspris och nuvarande pris för Token A'); return; }
 
@@ -3385,18 +3385,18 @@ function calcIL() {
   const breakeven = Math.abs(ilPct);
 
   // Visa resultat
-  document.getElementById(&quot;ilResult&quot;).style.display = 'block';
-  document.getElementById(&quot;ilChartWrap&quot;).style.display = 'block';
-  document.getElementById(&quot;ilPct&quot;).textContent = ilPct.toFixed(2) + '%';
-  document.getElementById(&quot;ilPct&quot;).style.color = ilPct < -1 ? 'var(--red)' : 'var(--green)';
-  document.getElementById(&quot;ilUsd&quot;).textContent = '$' + ilUsd.toFixed(2);
-  document.getElementById(&quot;ilLpValue&quot;).textContent = '$' + lpValue.toFixed(0);
-  document.getElementById(&quot;ilHoldValue&quot;).textContent = '$' + holdValue.toFixed(0);
-  document.getElementById(&quot;ilBreakeven&quot;).textContent = breakeven.toFixed(2) + '% APR';
-  document.getElementById(&quot;ilRatio&quot;).textContent = ratio.toFixed(2) + 'x';
+  document.getElementById('ilResult').style.display = 'block';
+  document.getElementById('ilChartWrap').style.display = 'block';
+  document.getElementById('ilPct').textContent = ilPct.toFixed(2) + '%';
+  document.getElementById('ilPct').style.color = ilPct < -1 ? 'var(--red)' : 'var(--green)';
+  document.getElementById('ilUsd').textContent = '$' + ilUsd.toFixed(2);
+  document.getElementById('ilLpValue').textContent = '$' + lpValue.toFixed(0);
+  document.getElementById('ilHoldValue').textContent = '$' + holdValue.toFixed(0);
+  document.getElementById('ilBreakeven').textContent = breakeven.toFixed(2) + '% APR';
+  document.getElementById('ilRatio').textContent = ratio.toFixed(2) + 'x';
 
   // Tips
-  const tipEl = document.getElementById(&quot;ilTip&quot;);
+  const tipEl = document.getElementById('ilTip');
   if (Math.abs(ilPct) < 0.5) {
     tipEl.innerHTML = '✅ <strong>Minimal IL.</strong> Priserna rörde sig nästan lika. Du behöver bara ' + breakeven.toFixed(2) + '% APR för att täcka förlusten.';
   } else if (Math.abs(ilPct) < 5) {
@@ -3410,7 +3410,7 @@ function calcIL() {
 }
 
 function drawILChart(currentRatio) {
-  const canvas = document.getElementById(&quot;ilChart&quot;);
+  const canvas = document.getElementById('ilChart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
@@ -3505,10 +3505,10 @@ function drawILChart(currentRatio) {
 }
 
 function calcHedge() {
-  const capital = parseFloat(document.getElementById(&quot;hedgeCapital&quot;).value) || 10000;
-  const price   = parseFloat(document.getElementById(&quot;hedgePrice&quot;).value);
-  const ratio   = parseFloat(document.getElementById(&quot;hedgeRatio&quot;).value) / 100 || 0.5;
-  const strategy = document.getElementById(&quot;hedgeStrategy&quot;).value;
+  const capital = parseFloat(document.getElementById('hedgeCapital').value) || 10000;
+  const price   = parseFloat(document.getElementById('hedgePrice').value);
+  const ratio   = parseFloat(document.getElementById('hedgeRatio').value) / 100 || 0.5;
+  const strategy = document.getElementById('hedgeStrategy').value;
 
   if (!price) { alert('Ange Token A-pris'); return; }
 
@@ -3543,15 +3543,15 @@ function calcHedge() {
   const costPerDay = hedgeUsd * fundingRate;
 
   // Visa resultat
-  document.getElementById(&quot;hedgeResult&quot;).style.display = 'block';
-  document.getElementById(&quot;hedgeShortAmt&quot;).textContent = hedgeAmt.toFixed(4) + ' tokens';
-  document.getElementById(&quot;hedgeShortUsd&quot;).textContent = '≈ $' + hedgeUsd.toFixed(0);
-  document.getElementById(&quot;hedgeDelta&quot;).textContent = deltaResult === 0 ? '≈ 0 (neutral)' : '$' + Math.abs(deltaResult).toFixed(0);
-  document.getElementById(&quot;hedgeDelta&quot;).style.color = deltaResult === 0 ? 'var(--green)' : 'var(--amber)';
-  document.getElementById(&quot;hedgeDown20&quot;).textContent = '+$' + protection.toFixed(0);
-  document.getElementById(&quot;hedgeCostDay&quot;).textContent = '$' + costPerDay.toFixed(2);
+  document.getElementById('hedgeResult').style.display = 'block';
+  document.getElementById('hedgeShortAmt').textContent = hedgeAmt.toFixed(4) + ' tokens';
+  document.getElementById('hedgeShortUsd').textContent = '≈ $' + hedgeUsd.toFixed(0);
+  document.getElementById('hedgeDelta').textContent = deltaResult === 0 ? '≈ 0 (neutral)' : '$' + Math.abs(deltaResult).toFixed(0);
+  document.getElementById('hedgeDelta').style.color = deltaResult === 0 ? 'var(--green)' : 'var(--amber)';
+  document.getElementById('hedgeDown20').textContent = '+$' + protection.toFixed(0);
+  document.getElementById('hedgeCostDay').textContent = '$' + costPerDay.toFixed(2);
 
-  const tipEl = document.getElementById(&quot;hedgeTip&quot;);
+  const tipEl = document.getElementById('hedgeTip');
   if (strategy === 'delta') {
     tipEl.innerHTML = '🛡️ <strong>Delta-neutral strategi:</strong> Du shortar ' + hedgeAmt.toFixed(4) + ' tokens (≈$' + hedgeUsd.toFixed(0) + ') på GMX eller dYdX. Din LP-position är nu skyddad mot prisrörelse. Du tjänar fees från LP, men betalar funding rate (~$' + costPerDay.toFixed(2) + '/dag).';
   } else if (strategy === 'half') {
@@ -3673,7 +3673,7 @@ self.addEventListener('fetch', e => {
   S.live.lu      = new Date();
 
   // Visa LIVE direkt
-  const chip = document.getElementById(&quot;statusChip&quot;);
+  const chip = document.getElementById('statusChip');
   if (chip) {
     chip.className = 'status-chip chip-live';
     chip.innerHTML = '<span class="dot-live"></span>&nbsp;LIVE';
@@ -3686,7 +3686,7 @@ self.addEventListener('fetch', e => {
     if (el) el.textContent = fmtP(S.live.prices[k]);
   });
   const p = S.live.prices[S.pair];
-  const cp = document.getElementById(&quot;currentPrice&quot;);
+  const cp = document.getElementById('currentPrice');
   if (cp && p) cp.value = p > 100 ? p.toFixed(2) : p.toFixed(4);
 
   // Hämta live-data i bakgrunden utan att blockera UI
