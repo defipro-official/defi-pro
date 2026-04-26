@@ -2825,47 +2825,72 @@ function renderFNG(data) {
   }
 }
 
-async function fetchTopCoins() {
+async async function fetchTopCoins() {
+  // Approximerade circulating supplies (uppdateras sällan)
+  const SUPPLY = {
+    BTCUSDT:19700000, ETHUSDT:120000000, SOLUSDT:460000000,
+    BNBUSDT:145000000, XRPUSDT:57000000000, ADAUSDT:35000000000,
+    AVAXUSDT:410000000, DOGEUSDT:144000000000, DOTUSDT:1400000000, LINKUSDT:600000000
+  };
+  const NAMES = {
+    BTCUSDT:'Bitcoin', ETHUSDT:'Ethereum', SOLUSDT:'Solana',
+    BNBUSDT:'BNB', XRPUSDT:'XRP', ADAUSDT:'Cardano',
+    AVAXUSDT:'Avalanche', DOGEUSDT:'Dogecoin', DOTUSDT:'Polkadot', LINKUSDT:'Chainlink'
+  };
+  const ICONS = {
+    BTCUSDT:'₿', ETHUSDT:'Ξ', SOLUSDT:'◎', BNBUSDT:'⬡',
+    XRPUSDT:'✦', ADAUSDT:'∞', AVAXUSDT:'▲', DOGEUSDT:'Ð', DOTUSDT:'●', LINKUSDT:'⬡'
+  };
   try {
-    const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=[%22BTCUSDT%22,%22ETHUSDT%22,%22SOLUSDT%22,%22BNBUSDT%22,%22XRPUSDT%22,%22ADAUSDT%22,%22AVAXUSDT%22,%22DOGEUSDT%22,%22DOTUSDT%22,%22LINKUSDT%22]');
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 6000);
+    const symbols = Object.keys(SUPPLY).map(s => '"' + s + '"').join(',');
+    const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=[' + symbols + ']', { signal: ctrl.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     const d = await r.json();
     const el = $('topCoins');
     if (!el) return;
-    // market stats
-    const totalMcap = d.reduce((a,c) => a + (c.market_cap||0), 0);
-    const btcMcap   = d.find(c => c.symbol === 'btc')?.market_cap || 0;
-    const btcDom    = (btcMcap / totalMcap * 100).toFixed(1);
-    const tot24hVol = d.reduce((a,c) => a + (c.total_volume||0), 0);
-    if ($('mktMcap'))   $('mktMcap').textContent   = fmtU(totalMcap);
+
+    // Beräkna market caps
+    let totalMcap = 0, btcMcap = 0, tot24hVol = 0;
+    d.forEach(t => {
+      const price = parseFloat(t.lastPrice);
+      const supply = SUPPLY[t.symbol] || 0;
+      const mcap = price * supply;
+      totalMcap += mcap;
+      tot24hVol += parseFloat(t.quoteVolume);
+      if (t.symbol === 'BTCUSDT') btcMcap = mcap;
+    });
+
+    const btcDom = totalMcap > 0 ? (btcMcap / totalMcap * 100).toFixed(1) : '—';
+    if ($('mktMcap'))   $('mktMcap').textContent   = '$' + (totalMcap/1e12).toFixed(2) + 'T';
     if ($('mktBtcDom')) $('mktBtcDom').textContent = btcDom + '%';
-    if ($('mktVol'))    $('mktVol').textContent     = fmtU(tot24hVol);
+    if ($('mktVol'))    $('mktVol').textContent     = '$' + (tot24hVol/1e9).toFixed(1) + 'B/dag';
 
-    el.innerHTML = d.map((c, i) => {
-      const ch = c.price_change_percentage_24h || 0;
-      return `<div class="coin-row">
-        <div class="coin-rank">${i+1}</div>
-        <div><div class="coin-name">${c.name}</div><div class="coin-sym">${c.symbol.toUpperCase()}</div></div>
-        <div class="coin-price mono">${c.current_price >= 1000 ? '$'+Math.round(c.current_price).toLocaleString() : '$'+c.current_price.toFixed(c.current_price<1?4:2)}</div>
-        <div class="coin-ch ${ch>=0?'green':'red'}">${ch>=0?'+':''}${ch.toFixed(2)}%</div>
-        <div class="coin-mc">${fmtU(c.market_cap||0)}</div>
-      </div>`;
+    // Rendera top 10 lista
+    el.innerHTML = d.map((t, i) => {
+      const price = parseFloat(t.lastPrice);
+      const change = parseFloat(t.priceChangePercent);
+      const chColor = change >= 0 ? 'var(--green)' : 'var(--red)';
+      const sym = t.symbol;
+      const supply = SUPPLY[sym] || 0;
+      const mcap = price * supply;
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">' +
+        '<div style="width:24px;text-align:center;color:var(--txt3);font-size:12px">' + (i+1) + '</div>' +
+        '<div style="width:28px;height:28px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px">' + (ICONS[sym]||'?') + '</div>' +
+        '<div style="flex:1"><div style="font-weight:600;font-size:13px">' + (NAMES[sym]||sym) + '</div>' +
+        '<div style="font-size:11px;color:var(--txt3)">' + sym.replace('USDT','') + (mcap>0?' · $'+(mcap/1e9).toFixed(1)+'B':'') + '</div></div>' +
+        '<div style="text-align:right"><div style="font-weight:700;font-size:13px">$' + (price>=1?price.toLocaleString('sv-SE',{maximumFractionDigits:2}):price.toFixed(4)) + '</div>' +
+        '<div style="font-size:12px;color:' + chColor + ';font-weight:600">' + (change>=0?'+':'') + change.toFixed(2) + '%</div></div>' +
+        '</div>';
     }).join('');
-  } catch(e) {}
-}
-
-async function fetchDeFiTVL() {
-  try {
-    const r = await fetch('https://api.llama.fi/v2/historicalChainTvl');
-    const d = await r.json();
-    const latest = d[d.length-1];
-    if ($('mktDeFiTvl') && latest) $('mktDeFiTvl').textContent = fmtU(latest.tvl);
   } catch(e) {
-    if ($('mktDeFiTvl')) $('mktDeFiTvl').textContent = 'Se DefiLlama';
+    const el = $('topCoins');
+    if (el) el.innerHTML = '<div style="color:var(--txt3);padding:16px;text-align:center">Kunde inte hämta marknadsdata</div>';
   }
 }
 
-// ── AAVE ─────────────────────────────────────────────────────
-// ── HISTORISK APY-DATA ───────────────────────────────────────
+
 async function fetchPoolHistory(poolId) {
   try {
     const ctrl = new AbortController();
