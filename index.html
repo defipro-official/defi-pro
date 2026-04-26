@@ -166,6 +166,12 @@ select option{background:var(--bg2)}
 .czk{background:rgba(97,188,255,.15);color:#61bcff}
 .clinea{background:rgba(98,188,98,.15);color:#62bc62}
 .cblast{background:rgba(252,185,0,.15);color:#fcb900}
+.cscroll{background:rgba(255,165,0,.15);color:#ffa500}
+.cmantle{background:rgba(0,200,100,.15);color:#00c864}
+.ccelo{background:rgba(50,200,100,.15);color:#32c864}
+.cftm{background:rgba(25,105,255,.15);color:#1969ff}
+.ccro{background:rgba(0,45,165,.15);color:#002da5}
+.cmoon{background:rgba(100,150,255,.15);color:#6496ff}
 
 /* ── LOADER ─────────────────────────────────────────────── */
 .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(128,128,128,.2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
@@ -969,6 +975,12 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
       <button class="cf-btn" data-cf="zkSync">⚡ zkSync</button>
       <button class="cf-btn" data-cf="Linea">🟢 Linea</button>
       <button class="cf-btn" data-cf="Blast">💥 Blast</button>
+      <button class="cf-btn" data-cf="Scroll">📜 Scroll</button>
+      <button class="cf-btn" data-cf="Mantle">🟢 Mantle</button>
+      <button class="cf-btn" data-cf="Celo">🌱 Celo</button>
+      <button class="cf-btn" data-cf="Fantom">👻 Fantom</button>
+      <button class="cf-btn" data-cf="Cronos">🔵 Cronos</button>
+      <button class="cf-btn" data-cf="Moonbeam">🌕 Moonbeam</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--txt3);font-weight:600">Sortera:</span>
@@ -2589,7 +2601,7 @@ function stab(p) {
   return Math.min(5, s);
 }
 function cch(chain) {
-  return { Ethereum:'ceth', Arbitrum:'carb', Base:'cbase', Solana:'csol', Sui:'csui', Optimism:'cop', Polygon:'cpoly', BSC:'cbnb', Avalanche:'cavax', zkSync:'czk', Linea:'clinea', Blast:'cblast' }[chain] || '';
+  return { Ethereum:'ceth', Arbitrum:'carb', Base:'cbase', Solana:'csol', Sui:'csui', Optimism:'cop', Polygon:'cpoly', BSC:'cbnb', Avalanche:'cavax', zkSync:'czk', Linea:'clinea', Blast:'cblast', Scroll:'cscroll', Mantle:'cmantle', Celo:'ccelo', Fantom:'cftm', Cronos:'ccro', Moonbeam:'cmoon' }[chain] || '';
 }
 
 // ── HOT HERO CARDS ───────────────────────────────────────────
@@ -2704,7 +2716,10 @@ function renderPools() {
       <td><span class="mono" style="font-size:12px;color:${apy7dColor}">${apy7d}</span></td>
       <td><div class="stab-dots">${dots}</div></td>
       <td class="mono bold green" style="font-size:12px">${fmtU(25000*apy/100/12)}</td>
-      <td><a href="${proto.url}" target="_blank" rel="noopener" class="pool-open-btn" onclick="event.stopPropagation()">${proto.icon} Öppna ↗</a></td>`;
+      <td style="white-space:nowrap">
+        <a href="${proto.url}" target="_blank" rel="noopener" class="pool-open-btn" onclick="event.stopPropagation()">${proto.icon} Öppna ↗</a>
+        <button onclick="event.stopPropagation();showPoolHistory('${p.pool}','${p.symbol} ${p.project}')" style="margin-left:6px;background:rgba(77,141,255,.15);border:1px solid rgba(77,141,255,.3);color:var(--blue);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:var(--sans)">📈 Historik</button>
+      </td>`;
     tbody.appendChild(tr);
   });
 }
@@ -2794,7 +2809,7 @@ function renderFNG(data) {
   // Needle rotation: -90° = 0 (left), +90° = 100 (right)
   const angle = (val / 100) * 180 - 90;
   const needle = $('fgNeedle');
-  if (needle) needle.setAttribute('transform', `rotate(${angle} 90 95)`);
+  if (needle) needle.setAttribute('transform', 'rotate(' + angle + ' 90 95)');
 
   // History bars
   const hist = $('fngHistory');
@@ -2850,6 +2865,108 @@ async function fetchDeFiTVL() {
 }
 
 // ── AAVE ─────────────────────────────────────────────────────
+// ── HISTORISK APY-DATA ───────────────────────────────────────
+async function fetchPoolHistory(poolId) {
+  try {
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch('https://yields.llama.fi/chart/' + poolId, { signal: ctrl.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    return (d.data || []).slice(-30); // Senaste 30 dagarna
+  } catch(e) {
+    console.warn('Pool history fetch failed:', e.message);
+    return [];
+  }
+}
+
+function showPoolHistory(poolId, poolName) {
+  const modal = document.getElementById('historyModal');
+  if (!modal) {
+    // Skapa modal
+    const m = document.createElement('div');
+    m.id = 'historyModal';
+    m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
+    m.innerHTML = '<div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--r3);padding:24px;width:100%;max-width:600px;max-height:80vh;overflow-y:auto">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">' +
+      '<div style="font-size:16px;font-weight:700" id="historyTitle">APY-historik</div>' +
+      '<button onclick="document.getElementById('historyModal').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--txt3)">✕</button>' +
+      '</div>' +
+      '<div id="historyContent"><span class="spin"></span> Hämtar historik...</div>' +
+      '</div>';
+    document.body.appendChild(m);
+  }
+  document.getElementById('historyTitle').textContent = '📈 APY-historik: ' + poolName;
+  document.getElementById('historyContent').innerHTML = '<div style="text-align:center;padding:20px"><span class="spin"></span><div style="margin-top:8px;color:var(--txt3)">Hämtar 30 dagars data...</div></div>';
+  
+  fetchPoolHistory(poolId).then(data => {
+    if (!data.length) {
+      document.getElementById('historyContent').innerHTML = '<div style="color:var(--txt3);text-align:center;padding:20px">Ingen historisk data tillgänglig för denna pool.</div>';
+      return;
+    }
+    const avgApy = (data.reduce((s,d) => s + (d.apy||0), 0) / data.length).toFixed(2);
+    const maxApy = Math.max(...data.map(d => d.apy||0)).toFixed(2);
+    const minApy = Math.min(...data.map(d => d.apy||0)).toFixed(2);
+    
+    let html = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">' +
+      '<div style="text-align:center;padding:12px;background:var(--bg2);border-radius:var(--r)"><div style="font-size:10px;color:var(--txt3)">SNITT 30D</div><div style="font-size:20px;font-weight:700;color:var(--green)">' + avgApy + '%</div></div>' +
+      '<div style="text-align:center;padding:12px;background:var(--bg2);border-radius:var(--r)"><div style="font-size:10px;color:var(--txt3)">MAX</div><div style="font-size:20px;font-weight:700;color:var(--blue)">' + maxApy + '%</div></div>' +
+      '<div style="text-align:center;padding:12px;background:var(--bg2);border-radius:var(--r)"><div style="font-size:10px;color:var(--txt3)">MIN</div><div style="font-size:20px;font-weight:700;color:var(--amber)">' + minApy + '%</div></div>' +
+      '</div>';
+    
+    // Canvas graf
+    html += '<canvas id="apyHistChart" width="550" height="180" style="width:100%;background:var(--bg2);border-radius:var(--r)"></canvas>';
+    html += '<div style="margin-top:12px;font-size:12px;color:var(--txt3)">Data från DefiLlama · Senaste 30 dagarna</div>';
+    
+    document.getElementById('historyContent').innerHTML = html;
+    
+    // Rita graf
+    setTimeout(() => {
+      const canvas = document.getElementById('apyHistChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const pad = {top:15,right:15,bottom:25,left:40};
+      const cW = W-pad.left-pad.right, cH = H-pad.top-pad.bottom;
+      
+      const apys = data.map(d => d.apy||0);
+      const maxV = Math.max(...apys) * 1.1;
+      const minV = Math.min(...apys) * 0.9;
+      
+      ctx.fillStyle = '#111525';
+      ctx.fillRect(0,0,W,H);
+      
+      // Grid
+      ctx.strokeStyle = 'rgba(255,255,255,.05)';
+      for(let i=0;i<=3;i++){
+        const y = pad.top + (i/3)*cH;
+        ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(W-pad.right,y);ctx.stroke();
+        const v = maxV - (i/3)*(maxV-minV);
+        ctx.fillStyle='rgba(180,180,180,.5)';ctx.font='10px sans-serif';ctx.textAlign='right';
+        ctx.fillText(v.toFixed(1)+'%', pad.left-4, y+4);
+      }
+      
+      // Linje
+      ctx.strokeStyle='#4d8dff';ctx.lineWidth=2;ctx.beginPath();
+      apys.forEach((v,i)=>{
+        const x=pad.left+(i/(apys.length-1))*cW;
+        const y=pad.top+((maxV-v)/(maxV-minV))*cH;
+        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+      
+      // Fill
+      ctx.fillStyle='rgba(77,141,255,.1)';ctx.beginPath();
+      apys.forEach((v,i)=>{
+        const x=pad.left+(i/(apys.length-1))*cW;
+        const y=pad.top+((maxV-v)/(maxV-minV))*cH;
+        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      });
+      ctx.lineTo(pad.left+cW,pad.top+cH);ctx.lineTo(pad.left,pad.top+cH);ctx.closePath();ctx.fill();
+    }, 50);
+  });
+}
+
 // Aave V3 subgraph endpoints per kedja
 const AAVE_SUBGRAPHS = {
   ethereum: 'https://gateway.thegraph.com/api/public/subgraphs/id/Cd2gEDVeqnjBn1hSeqFMitw8Q1iiyV9FYUZkLNRcL87g',
@@ -2976,108 +3093,95 @@ function renderPortfolio() {
 }
 async function loadOnchain() {
   const el = $('onchainList');
-  if (!el) return;
-  el.innerHTML = '<span class="spin"></span> Hämtar positioner...';
+  if (!el || !wallet.addr) return;
+  el.innerHTML = '<div style="text-align:center;padding:16px"><span class="spin" style="width:20px;height:20px;border-width:2px"></span><div style="margin-top:8px;font-size:13px;color:var(--txt3)">Hämtar on-chain positioner...</div></div>';
+  
+  const addr = wallet.addr.toLowerCase();
+  const alchemyKey = localStorage.getItem('alchemyKey') || '';
+  let html = '';
+  let found = false;
+
+  // Försök 1: DefiLlama user positions (ingen nyckel)
   try {
-    const r = await fetch('https://api.llama.fi/getUserPositions?address=' + wallet.addr.toLowerCase());
-    const d = await r.json();
-    const pos = (d.positions || d.data || []).filter(p => (p.tvlUsd||0) > 10);
-    if (!pos.length) { el.innerHTML = '<div class="tip-box"><div class="tip-icon">ℹ️</div><div>Inga aktiva LP-positioner hittades. Data kan ta upp till 1h att uppdateras.</div></div>'; return; }
-    el.innerHTML = pos.slice(0,15).map(p => {
-      const proto = getProto(p.protocol || p.project || '');
-      const inRange = p.inRange !== false;
-      return `<div class="pos-card" style="border-color:${inRange?'rgba(0,214,143,.2)':'rgba(255,77,109,.2)'}"><div><div style="font-weight:700;font-size:14px">${proto.icon} ${p.symbol||p.pair||'Position'}</div><div style="font-size:11px;color:var(--txt3);margin-top:2px">${proto.name} · ${p.chain||'ETH'} · $${Math.round(p.tvlUsd||0).toLocaleString()}</div></div><span style="font-size:13px;font-weight:700;color:${inRange?'var(--green)':'var(--red)'}">${inRange?'✓ In-range':'✗ Ur range'}</span></div>`;
-    }).join('');
-  } catch(e) { el.innerHTML = '<div class="tip-box"><div class="tip-icon">⚠️</div><div>Demo-positioner visas. Live on-chain data kräver indexeringstjänst.</div></div><div class="pos-card" style="border-color:rgba(0,214,143,.2)"><div><div style="font-weight:700">🦄 WETH/USDC</div><div style="font-size:11px;color:var(--txt3)">Uniswap V3 · Arbitrum · $12 500</div></div><span class="green bold">✓ In-range</span></div>'; }
-}
-
-// ── GOAL CALCULATOR ──────────────────────────────────────────
-function syncSlider() { const s=$('goalSlider'); if(s) s.value=Math.min(10000,parseFloat($('goalMo').value)||500); }
-function calcGoal() {
-  const capital = parseFloat($('goalCap').value) || 25000;
-  const monthly = parseFloat($('goalMo').value)  || 500;
-  syncSlider();
-  const reqAPR = (monthly * 12 / capital) * 100;
-  $('goalResults').classList.remove('hidden');
-  $('goalReqAPR').textContent   = reqAPR.toFixed(1) + '%';
-  $('goalMoShow').textContent   = fmtE(monthly);
-  $('goalCapShow').textContent  = '$' + capital.toLocaleString();
-  $('goalD').textContent = fmtE(monthly/30);
-  $('goalW').textContent = fmtE(monthly/4.33);
-  $('goalM').textContent = fmtE(monthly);
-  $('goalY').textContent = fmtE(monthly*12);
-
-  // Feasibility
-  let icon, color, title, desc;
-  if      (reqAPR <= 10)  { icon='✅'; color='var(--green)'; title='Mycket realistiskt'; desc='Under 10% APR uppnås lätt med Aave (4-8%) eller Uniswap V3 ETH/USDC med bred range. Mycket låg risk.'; }
-  else if (reqAPR <= 25)  { icon='👍'; color='var(--blue)';  title='Realistiskt med rätt strategi'; desc=reqAPR.toFixed(1)+'% APR är uppnåeligt med aktiv LP i ETH/USDC på Arbitrum med balanserad range.'; }
-  else if (reqAPR <= 60)  { icon='⚠️'; color='var(--amber)'; title='Möjligt men kräver aktiv hantering'; desc='Kräver tight range och regelbunden rebalansering. Hög IL-risk vid prisrörelser.'; }
-  else if (reqAPR <= 150) { icon='🔴'; color='var(--red)';   title='Aggressivt mål — hög risk'; desc='Kan uppnås under bull markets med ultra-tight range, men orealistiskt konstant.'; }
-  else                    { icon='❌'; color='var(--red)';   title='Orealistiskt mål'; desc=`För att nå ${fmtE(monthly)}/mån med 30% APR behöver du $${Math.ceil(monthly*12/0.3).toLocaleString()} i kapital.`; }
-
-  $('goalFeasCard').style.borderColor = color;
-  $('goalFeasContent').innerHTML = `<div style="display:flex;gap:14px;align-items:flex-start"><div style="font-size:28px">${icon}</div><div><div style="font-size:15px;font-weight:700;color:${color};margin-bottom:5px">${title}</div><div style="font-size:13px;color:var(--txt2);line-height:1.7">${desc}</div></div></div>`;
-
-  // Strategy
-  let pair, chain, fee, riskLvl, mgmtTip;
-  if      (reqAPR <= 8)  { pair='USDC/USDT'; chain='Arbitrum'; fee='0.01%'; riskLvl='🛡️ Trygg'; mgmtTip='Full range — minimal IL'; }
-  else if (reqAPR <= 20) { pair='ETH/USDC';  chain='Arbitrum'; fee='0.05%'; riskLvl='⚖️ Balanserad'; mgmtTip='±20% range, rebalansera månadsvis'; }
-  else if (reqAPR <= 50) { pair='ETH/USDC eller SOL/USDC'; chain='Arbitrum/Solana'; fee='0.05-0.30%'; riskLvl='🚀 Aggressiv'; mgmtTip='±10% range, rebalansera veckovis'; }
-  else                   { pair='SOL/USDC eller SUI/USDC'; chain='Solana/Sui'; fee='0.25%'; riskLvl='💀 Extremt aggressiv'; mgmtTip='±5% range, daglig övervakning'; }
-
-  $('goalStrategy').innerHTML = [
-    {icon:'💱',lbl:'Rekommenderat par',val:pair},
-    {icon:'⛓️',lbl:'Rekommenderad kedja',val:chain},
-    {icon:'💸',lbl:'Fee-tier',val:fee},
-    {icon:'🎯',lbl:'Risknivå',val:riskLvl},
-    {icon:'🔄',lbl:'Hantering',val:mgmtTip},
-    {icon:'📊',lbl:'Nödvändig APR',val:reqAPR.toFixed(1)+'%'},
-  ].map(s => `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;align-items:flex-start;gap:10px"><span style="font-size:18px">${s.icon}</span><div><div style="font-size:10px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px">${s.lbl}</div><div style="font-size:13px;font-weight:600">${s.val}</div></div></div>`).join('');
-
-  // Range
-  const P = S.live.prices['WETH'] || 2200;
-  const refHW = reqAPR <= 20 ? 0.25 : reqAPR <= 50 ? 0.15 : 0.07;
-  const rLo = P*(1-refHW), rHi = P*(1+refHW);
-  $('goalRange').innerHTML = `<div class="grid-3" style="margin-bottom:10px"><div style="background:var(--bg2);border:1px solid rgba(255,77,109,.25);border-radius:var(--r);padding:12px;text-align:center"><div style="font-size:10px;color:var(--red);font-weight:700;margin-bottom:4px">NEDRE</div><div class="mono bold red" style="font-size:17px">${fmtP(rLo)}</div><div style="font-size:10px;color:var(--txt3)">−${(refHW*100).toFixed(0)}%</div></div><div style="background:var(--bblue);border:1px solid rgba(77,141,255,.2);border-radius:var(--r);padding:12px;text-align:center"><div style="font-size:10px;color:var(--blue);font-weight:700;margin-bottom:4px">NULÄGE</div><div class="mono bold blue" style="font-size:17px">${fmtP(P)}</div><div style="font-size:10px;color:var(--txt3)">ETH/USDC</div></div><div style="background:var(--bg2);border:1px solid rgba(0,214,143,.25);border-radius:var(--r);padding:12px;text-align:center"><div style="font-size:10px;color:var(--green);font-weight:700;margin-bottom:4px">ÖVRE</div><div class="mono bold green" style="font-size:17px">${fmtP(rHi)}</div><div style="font-size:10px;color:var(--txt3)">+${(refHW*100).toFixed(0)}%</div></div></div>`;
-
-  // Matching pools
-  const pEl = $('goalPools');
-  if (S.live.pools.length) {
-    const matches = S.live.pools
-      .filter(p => (p.apy||0) >= reqAPR*0.7 && (p.tvlUsd||0) > 500000)
-      .filter(p => GOOD.some(t => (p.symbol||'').toUpperCase().includes(t)))
-      .sort((a,b) => Math.abs(a.apy-reqAPR)-Math.abs(b.apy-reqAPR))
-      .slice(0, 5);
-    if (!matches.length) { pEl.innerHTML = '<div class="warn-box">Inga pooler med ' + reqAPR.toFixed(0) + '%+ APY hittades. Sänk målet eller öka kapitalet.</div>'; }
-    else {
-      pEl.innerHTML = matches.map(p => {
-        const proto  = getProto(p.project);
-        const mo     = capital * (p.apy||0)/100/12;
-        const meets  = mo >= monthly;
-        const key    = storePool({symbol:p.symbol,project:p.project,chain:p.chain,apy:p.apy,tvlUsd:p.tvlUsd});
-        return `<div data-simkey="${key}" style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:var(--bg2);border:1.5px solid ${meets?'rgba(0,214,143,.25)':'var(--border)'};border-radius:var(--r);margin-bottom:7px;cursor:pointer">
-          <div><div style="font-weight:700;font-size:13px">${proto.icon} ${p.symbol} <span style="font-size:11px;color:var(--txt3)">· ${p.project} · ${p.chain}</span></div><div style="font-size:11px;color:var(--txt3);margin-top:2px">TVL: ${fmtU(p.tvlUsd||0)} · ${fmtE(mo)}/mån</div></div>
-          <div style="display:flex;align-items:center;gap:10px"><div style="text-align:right"><div class="mono bold" style="font-size:16px;color:${meets?'var(--green)':'var(--amber)'}">${(p.apy||0).toFixed(1)}%</div><div style="font-size:10px;color:var(--txt3)">${meets?'✅ Möter målet':'⚠ Under målet'}</div></div><a href="${proto.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="pool-open-btn">${proto.icon} Öppna ↗</a></div>
-        </div>`;
-      }).join('');
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch('https://api.llama.fi/getUserPositions?address=' + addr, { signal: ctrl.signal });
+    if (r.ok) {
+      const d = await r.json();
+      const pos = (d.positions || d.data || []).filter(p => (p.tvlUsd||0) > 10);
+      if (pos.length > 0) {
+        found = true;
+        html += '<div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">LP-Positioner via DefiLlama</div>';
+        html += pos.slice(0,15).map(p => {
+          const inRange = !p.priceMin || (S.live.prices['WETH'] >= p.priceMin && S.live.prices['WETH'] <= p.priceMax);
+          const rangeColor = inRange ? 'var(--green)' : 'var(--red)';
+          const rangeText = inRange ? '✓ In-range' : '✗ Ur range';
+          return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">' +
+            '<div><div style="font-weight:700;font-size:14px">' + (p.symbol||'LP') + '</div>' +
+            '<div style="font-size:12px;color:var(--txt3)">' + (p.project||'') + ' · ' + (p.chain||'') + '</div></div>' +
+            '<div style="text-align:right">' +
+            '<div style="font-size:16px;font-weight:700">$' + ((p.tvlUsd||0).toLocaleString('sv-SE',{maximumFractionDigits:0})) + '</div>' +
+            '<div style="font-size:12px;color:' + rangeColor + ';font-weight:600">' + rangeText + '</div>' +
+            '</div></div>';
+        }).join('');
+      }
     }
-  } else pEl.innerHTML = '<div style="color:var(--txt3)">Öppna Heta Pooler-fliken för att ladda pooldata.</div>';
-}
-function applyGoalToCalc() {
-  if ($('capital')) $('capital').value = $('goalCap').value;
-  const reqAPR = parseFloat($('goalMo').value)*12 / parseFloat($('goalCap').value) * 100;
-  document.querySelectorAll('.risk-card').forEach(b => b.classList.remove('on'));
-  const r = reqAPR > 40 ? 'aggressive' : reqAPR > 15 ? 'balanced' : 'conservative';
-  document.querySelector('[data-risk="'+r+'"]')?.classList.add('on');
-  S.risk = r;
-  document.querySelector('[data-p="calc"]').click();
-  calculate();
+  } catch(e) {}
+
+  // Försök 2: Alchemy token balances (om nyckel finns)
+  if (alchemyKey && !found) {
+    try {
+      const ctrl2 = new AbortController();
+      setTimeout(() => ctrl2.abort(), 8000);
+      const r2 = await fetch('https://eth-mainnet.g.alchemy.com/v2/' + alchemyKey + '/getTokenBalances/' + addr, { signal: ctrl2.signal });
+      if (r2.ok) {
+        const d2 = await r2.json();
+        const tokens = (d2.result?.tokenBalances || []).filter(t => t.tokenBalance !== '0x0000000000000000000000000000000000000000000000000000000000000000');
+        if (tokens.length > 0) {
+          found = true;
+          html += '<div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Token-balans via Alchemy</div>';
+          html += '<div style="font-size:12px;color:var(--txt3)">Hittade ' + tokens.length + ' tokens i plånboken.</div>';
+        }
+      }
+    } catch(e) {}
+  }
+
+  if (!found) {
+    html = '<div style="text-align:center;padding:24px;background:var(--bg2);border-radius:var(--r2);border:1px solid var(--border)">' +
+      '<div style="font-size:32px;margin-bottom:10px">📊</div>' +
+      '<div style="font-weight:700;margin-bottom:8px">Inga positioner hittades</div>' +
+      '<div style="font-size:13px;color:var(--txt2);line-height:1.7;margin-bottom:14px">DefiLlama hittade inga aktiva LP-positioner för denna adress.<br>Data kan ta upp till 1 timme att uppdateras efter en transaktion.</div>' +
+      '<div style="font-size:12px;color:var(--txt3);padding:10px;background:var(--bg3);border-radius:var(--r);text-align:left"><strong>Tips:</strong> För snabbare och mer detaljerade data kan du lägga till en gratis <a href="https://dashboard.alchemy.com" target="_blank" style="color:var(--blue)">Alchemy API-nyckel ↗</a> i inställningarna nedan.</div>' +
+      '</div>';
+  }
+
+  // Alchemy API-nyckel input
+  html += '<div style="margin-top:16px;padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2)">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--txt3);margin-bottom:8px;display:flex;justify-content:space-between">' +
+    '<span>🔑 Alchemy API-nyckel (valfritt, gratis)</span>' +
+    '<a href="https://dashboard.alchemy.com" target="_blank" style="color:var(--blue);font-size:10px">Skaffa gratis ↗</a></div>' +
+    '<div style="display:flex;gap:7px">' +
+    '<input type="text" id="alchemyKeyInput" placeholder="Klistra in API-nyckel..." value="' + (alchemyKey ? '••••••••••' : '') + '" style="flex:1;font-size:12px;font-family:monospace">' +
+    '<button onclick="saveAlchemyKey()" class="btn btn-primary btn-sm">Spara</button>' +
+    '</div>' +
+    '<div style="font-size:10px;color:var(--txt3);margin-top:5px">Ger snabbare och mer exakta on-chain data. Gratis på dashboard.alchemy.com</div>' +
+    '</div>';
+
+  el.innerHTML = html;
 }
 
-// ── ALERTS ───────────────────────────────────────────────────
-$('notifInfo').innerHTML = 'Notification' in window
-  ? '<div class="info-box mb-12" style="margin-bottom:12px"><span class="dot-live" style="margin-right:6px"></span>Webbläsarnotiser stöds ✓</div>'
-  : '<div class="warn-box" style="margin-bottom:12px">⚠ Din webbläsare stöder inte notiser.</div>';
+function saveAlchemyKey() {
+  const val = (document.getElementById('alchemyKeyInput')?.value || '').trim();
+  if (!val || val.includes('•')) return;
+  localStorage.setItem('alchemyKey', val);
+  const hint = document.createElement('div');
+  hint.style.cssText = 'color:var(--green);font-size:12px;margin-top:6px';
+  hint.textContent = '✅ API-nyckel sparad! Laddar om positioner...';
+  document.getElementById('alchemyKeyInput').parentElement.after(hint);
+  setTimeout(() => loadOnchain(), 1000);
+}
+
+
 async function startAlert() {
   if (!('Notification' in window)) return;
   if (await Notification.requestPermission() !== 'granted') { addLog('❌ Notiser blockerades.'); return; }
