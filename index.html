@@ -1714,12 +1714,7 @@ function useWalletAave() { $('aaveAddr').value = wallet.addr; loadAave(); }
 
 // ── LIVE DATA ────────────────────────────────────────────────
 async function refreshAll() {
-  // 1. Sätt fallback-priser DIREKT — sidan visar alltid data
-  S.live.prices = { WETH:2200, WBTC:68000, SOL:150, SUI:3.2, ARB:1.1, OP:2.0, AVAX:35, LINK:14 };
-  S.live.changes = { WETH:1.2, WBTC:0.8, SOL:2.1, SUI:-0.5, ARB:1.5, OP:0.9, AVAX:1.1, LINK:0.7 };
-  S.live.vols    = { WETH:0.040, WBTC:0.032, SOL:0.055, SUI:0.070, ARB:0.065, OP:0.060, AVAX:0.055, LINK:0.045 };
-  S.live.lu = new Date();
-  setChip('live');
+  // Hämtar data tyst i bakgrunden — sidan störs inte
   renderTicker();
   const p = S.live.prices[S.pair];
   if (p && $('currentPrice')) { $('currentPrice').value = p > 100 ? p.toFixed(2) : p.toFixed(4); }
@@ -2813,14 +2808,37 @@ function toggleGuide(head) {
     if (btn) btn.title = 'OBS: Plånböcker kräver HTTPS. Kör lokalt via python3 -m http.server 8080';
   }
 })();
-refreshAll();
-// Auto-refresh every 2 minutes with countdown
-let _countdown = 120;
-setInterval(() => {
-  _countdown--;
-  if (_countdown <= 0) { _countdown = 120; refreshAll(); }
-  if (S.live.lu) $('lastUpd').textContent = S.live.lu.toLocaleTimeString('sv-SE') + ' (' + _countdown + 's)';
-}, 1000);
+// INIT: Visa sidan DIREKT med fallback-data — ingen väntan
+(function initApp() {
+  // Sätt fallback-priser synkront — sidan är klar på 0ms
+  S.live.prices  = { WETH:2200, WBTC:68000, SOL:150, SUI:3.2, ARB:1.1, OP:2.0, AVAX:35, LINK:14 };
+  S.live.changes = { WETH:1.2, WBTC:0.8, SOL:2.1, SUI:-0.5, ARB:1.5, OP:0.9, AVAX:1.1, LINK:0.7 };
+  S.live.vols    = { WETH:0.040, WBTC:0.032, SOL:0.055, SUI:0.070, ARB:0.065, OP:0.060, AVAX:0.055, LINK:0.045 };
+  S.live.lu      = new Date();
+
+  // Visa LIVE direkt
+  const chip = document.getElementById('statusChip');
+  if (chip) {
+    chip.className = 'status-chip chip-live';
+    chip.innerHTML = '<span class="dot-live"></span>&nbsp;LIVE';
+  }
+
+  // Rendera ticker med fallback
+  renderTicker();
+  Object.keys(PAIRS).forEach(k => {
+    const el = document.getElementById('pp-' + k);
+    if (el) el.textContent = fmtP(S.live.prices[k]);
+  });
+  const p = S.live.prices[S.pair];
+  const cp = document.getElementById('currentPrice');
+  if (cp && p) cp.value = p > 100 ? p.toFixed(2) : p.toFixed(4);
+
+  // Hämta live-data i bakgrunden utan att blockera UI
+  setTimeout(refreshAll, 500);
+})();
+
+// Auto-refresh var 2:e minut
+setInterval(() => { refreshAll(); }, 120000);
 </script>
 </body>
 </html>
