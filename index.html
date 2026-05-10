@@ -708,6 +708,7 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
   <button class="nav-btn" data-p="aave"><span>🏦</span><span class="nav-label">Aave</span></button>
   <button class="nav-btn" data-p="mål"><span>🎯</span><span class="nav-label">Avkastningsmål</span></button>
   <button class="nav-btn" data-p="alerts"><span>🔔</span><span class="nav-label">Notiser</span></button>
+  <button class="nav-btn" data-p="positions"><span>📍</span><span class="nav-label">Positioner</span></button>
   <button class="nav-btn" data-p="agent"><span>🤖</span><span class="nav-label">Agent</span></button>
   <button class="nav-btn" data-p="guide" style="margin-left:auto;border-left:1px solid var(--border);padding-left:14px"><span>📖</span><span class="nav-label" style="color:var(--blue)">Guide</span></button>
 </div>
@@ -1056,6 +1057,112 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
 </div>
 
 
+
+
+<!-- ══════════ PANEL: POSITIONER ══════════════════════════════ -->
+<div class="panel" id="panel-positions">
+
+  <div style="font-size:24px;font-weight:800;margin-bottom:4px;font-family:var(--sans)">📍 Positioner</div>
+  <div style="font-size:14px;color:var(--txt2);margin-bottom:24px">Övervaka dina aktiva LP-ranges i realtid</div>
+
+  <!-- Range Monitor Card -->
+  <div class="card" id="rangeMonitorCard">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+      <div>
+        <div style="font-size:22px;font-weight:800;font-family:var(--sans)">SUI/<span style="color:var(--blue)">USDC</span></div>
+        <div style="font-size:11px;color:var(--txt3);margin-top:3px">Turbos Finance · CLMM</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:26px;font-weight:700;color:var(--blue);font-family:var(--mono)" id="rmPrice">$—</div>
+        <div style="font-size:12px;margin-top:3px" id="rmChange">—</div>
+      </div>
+    </div>
+
+    <!-- Range Bar -->
+    <div style="margin:16px 0">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt3);font-family:var(--mono);margin-bottom:8px">
+        <span id="rmLowerLabel">$— (—%)</span>
+        <span style="color:var(--txt)">Aktiv range</span>
+        <span id="rmUpperLabel">$— (+—%)</span>
+      </div>
+      <div style="height:14px;background:var(--bg2);border-radius:7px;position:relative;overflow:visible;border:1px solid var(--border)" id="rmBar">
+        <div style="position:absolute;height:100%;background:linear-gradient(90deg,rgba(77,141,255,.1),rgba(77,141,255,.35));border-radius:7px;border:1px solid rgba(77,141,255,.3);left:0;width:100%" id="rmFill"></div>
+        <div style="position:absolute;top:-8px;width:4px;height:30px;background:var(--blue);border-radius:2px;transform:translateX(-50%);box-shadow:0 0 10px var(--blue);transition:left .5s ease;left:50%" id="rmNeedle">
+          <span style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--blue);font-family:var(--mono);white-space:nowrap">Nu</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div id="rmStatus" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--r);margin:12px 0;background:rgba(0,214,143,.06);border:1px solid rgba(0,214,143,.2);color:var(--green);font-size:13px">
+      <span>✓</span><span id="rmStatusText">Laddar...</span>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">APR</div>
+        <div style="font-size:18px;font-weight:700;color:var(--green);font-family:var(--mono)" id="rmApr">—</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Position</div>
+        <div style="font-size:18px;font-weight:700;color:var(--blue);font-family:var(--mono)" id="rmPosition">—</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Daglig yield</div>
+        <div style="font-size:18px;font-weight:700;color:var(--green);font-family:var(--mono)" id="rmDaily">—</div>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div style="height:3px;background:var(--bg2);border-radius:2px;margin-top:16px;overflow:hidden">
+      <div style="height:100%;background:var(--blue);border-radius:2px;transition:width 1s linear" id="rmRefreshBar" style="width:100%"></div>
+    </div>
+    <div style="font-size:10px;color:var(--txt3);text-align:right;margin-top:4px;font-family:var(--mono)" id="rmRefreshLabel">Uppdaterar om 300s</div>
+  </div>
+
+  <!-- Konfigurera -->
+  <div class="card" style="margin-top:16px">
+    <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">⚙️ Konfigurera position</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px" class="rm-config-grid">
+      <div>
+        <label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:5px">Nuvarande pris ($)</label>
+        <input type="number" id="rmInputPrice" value="1.08" step="0.01" style="width:100%;font-family:var(--mono);font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:5px">Nedre range (%)</label>
+        <input type="number" id="rmInputLower" value="-10" step="1" style="width:100%;font-family:var(--mono);font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:5px">Övre range (%)</label>
+        <input type="number" id="rmInputUpper" value="14" step="1" style="width:100%;font-family:var(--mono);font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:5px">Position ($)</label>
+        <input type="number" id="rmInputPosition" value="5000" step="100" style="width:100%;font-family:var(--mono);font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:5px">APR (%)</label>
+        <input type="number" id="rmInputApr" value="250" step="1" style="width:100%;font-family:var(--mono);font-size:13px">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--txt3);display:block;margin-bottom:5px">Varna vid (% kvar)</label>
+        <input type="number" id="rmInputWarn" value="20" step="5" style="width:100%;font-family:var(--mono);font-size:13px">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="rmUpdateConfig()" style="flex:1">Uppdatera</button>
+      <button class="btn btn-ghost" onclick="rmFetchPrice()" style="flex:1">📡 Hämta live-pris</button>
+    </div>
+  </div>
+
+  <!-- Aktivitetslogg -->
+  <div class="card" style="margin-top:16px">
+    <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">📋 Aktivitetslogg</div>
+    <div id="rmLog" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px;height:140px;overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.8"></div>
+  </div>
+
+</div><!-- end panel-positions -->
 
 <!-- ══════════ PANEL: AGENT ════════════════════════════════ -->
 <div class="panel" id="panel-agent">
@@ -3158,6 +3265,161 @@ async function runAgentAi() {
   const saved = localStorage.getItem('agentClaudeKey');
   const el = document.getElementById('agentApiKey');
   if (saved && el) el.value = saved;
+})();
+
+
+// ═══════════════════════════════════════════════════════════════
+// RANGE MONITOR — Positioner-panel
+// ═══════════════════════════════════════════════════════════════
+
+const rmState = {
+  price: 1.08, lowerPct: -10, upperPct: 14,
+  position: 5000, apr: 250, warnPct: 20,
+  countdown: 300, timer: null
+};
+
+function rmLog(msg, type) {
+  const box = document.getElementById('rmLog');
+  if (!box) return;
+  const now = new Date().toLocaleTimeString('sv-SE');
+  const div = document.createElement('div');
+  const colors = { info:'var(--blue)', ok:'var(--green)', warn:'var(--amber)', err:'var(--red)' };
+  div.style.color = colors[type] || 'var(--txt3)';
+  div.textContent = '[' + now + '] ' + msg;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function rmRender() {
+  const lower = rmState.price * (1 + rmState.lowerPct / 100);
+  const upper = rmState.price * (1 + rmState.upperPct / 100);
+  const current = rmState.price;
+  const totalRange = upper - lower;
+  const pos = Math.max(0, Math.min(1, (current - lower) / totalRange));
+
+  // Uppdatera UI
+  const priceEl = document.getElementById('rmPrice');
+  if (priceEl) priceEl.textContent = '$' + current.toFixed(4);
+  const lowerEl = document.getElementById('rmLowerLabel');
+  if (lowerEl) lowerEl.textContent = '$' + lower.toFixed(4) + ' (' + rmState.lowerPct + '%)';
+  const upperEl = document.getElementById('rmUpperLabel');
+  if (upperEl) upperEl.textContent = '$' + upper.toFixed(4) + ' (+' + rmState.upperPct + '%)';
+
+  const needle = document.getElementById('rmNeedle');
+  if (needle) needle.style.left = (pos * 100) + '%';
+
+  // Status
+  const distLower = ((current - lower) / totalRange) * 100;
+  const distUpper = ((upper - current) / totalRange) * 100;
+  const minDist = Math.min(distLower, distUpper);
+  const statusEl = document.getElementById('rmStatus');
+  const statusTxt = document.getElementById('rmStatusText');
+
+  if (current <= lower || current >= upper) {
+    if (statusEl) { statusEl.style.background='rgba(255,68,68,.06)'; statusEl.style.borderColor='rgba(255,68,68,.3)'; statusEl.style.color='var(--red)'; }
+    if (statusTxt) statusTxt.textContent = '⚠ UTANFÖR RANGE — Du tjänar inga fees! Rebalansera nu.';
+    rmSendTelegram('🚨 SUI/USDC UTANFÖR RANGE!\nPris: $' + current.toFixed(4) + '\nRange: $' + lower.toFixed(4) + ' – $' + upper.toFixed(4));
+  } else if (minDist < rmState.warnPct) {
+    if (statusEl) { statusEl.style.background='rgba(255,179,0,.06)'; statusEl.style.borderColor='rgba(255,179,0,.3)'; statusEl.style.color='var(--amber)'; }
+    const side = distLower < distUpper ? 'nedre' : 'övre';
+    if (statusTxt) statusTxt.textContent = '⚡ Varning: Priset närmar sig ' + side + ' gränsen (' + minDist.toFixed(1) + '% kvar)';
+  } else {
+    if (statusEl) { statusEl.style.background='rgba(0,214,143,.06)'; statusEl.style.borderColor='rgba(0,214,143,.2)'; statusEl.style.color='var(--green)'; }
+    if (statusTxt) statusTxt.textContent = '✓ Priset är inom range — du tjänar fees aktivt (' + minDist.toFixed(1) + '% marginal)';
+  }
+
+  // Stats
+  const daily = (rmState.position * rmState.apr / 100) / 365;
+  const aprEl = document.getElementById('rmApr');
+  if (aprEl) aprEl.textContent = rmState.apr + '%';
+  const posEl = document.getElementById('rmPosition');
+  if (posEl) posEl.textContent = '$' + rmState.position.toLocaleString('sv-SE');
+  const dailyEl = document.getElementById('rmDaily');
+  if (dailyEl) dailyEl.textContent = '$' + daily.toFixed(2);
+
+  // Spara
+  localStorage.setItem('rmState', JSON.stringify(rmState));
+}
+
+async function rmFetchPrice() {
+  try {
+    rmLog('Hämtar live SUI-pris...', 'info');
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=sui&vs_currencies=usd&include_24hr_change=true');
+    const d = await r.json();
+    const price = d.sui.usd;
+    const change = d.sui.usd_24h_change;
+    rmState.price = price;
+    const inp = document.getElementById('rmInputPrice');
+    if (inp) inp.value = price.toFixed(4);
+    const chEl = document.getElementById('rmChange');
+    if (chEl) {
+      chEl.textContent = (change >= 0 ? '▲ +' : '▼ ') + change.toFixed(2) + '% 24h';
+      chEl.style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
+    }
+    rmRender();
+    rmLog('Live pris: $' + price.toFixed(4), 'ok');
+  } catch(e) {
+    rmLog('Kunde inte hämta pris: ' + e.message, 'err');
+  }
+}
+
+function rmUpdateConfig() {
+  rmState.price = parseFloat(document.getElementById('rmInputPrice')?.value) || 1.08;
+  rmState.lowerPct = parseFloat(document.getElementById('rmInputLower')?.value) || -10;
+  rmState.upperPct = parseFloat(document.getElementById('rmInputUpper')?.value) || 14;
+  rmState.position = parseFloat(document.getElementById('rmInputPosition')?.value) || 5000;
+  rmState.apr = parseFloat(document.getElementById('rmInputApr')?.value) || 250;
+  rmState.warnPct = parseFloat(document.getElementById('rmInputWarn')?.value) || 20;
+  rmRender();
+  rmLog('Konfiguration uppdaterad', 'ok');
+}
+
+async function rmSendTelegram(msg) {
+  const token = (document.getElementById('agentTgToken')?.value || '').trim();
+  const chatId = (document.getElementById('agentTgChatId')?.value || '').trim();
+  if (!token || !chatId) return;
+  try {
+    await fetch('https://api.telegram.org/bot' + token + '/sendMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: msg })
+    });
+    rmLog('Telegram-alert skickat', 'ok');
+  } catch(e) { rmLog('Telegram-fel: ' + e.message, 'err'); }
+}
+
+function rmStartTimer() {
+  if (rmState.timer) clearInterval(rmState.timer);
+  rmState.countdown = 300;
+  rmState.timer = setInterval(() => {
+    rmState.countdown--;
+    const pct = (rmState.countdown / 300) * 100;
+    const bar = document.getElementById('rmRefreshBar');
+    if (bar) bar.style.width = pct + '%';
+    const lbl = document.getElementById('rmRefreshLabel');
+    if (lbl) lbl.textContent = 'Uppdaterar om ' + rmState.countdown + 's';
+    if (rmState.countdown <= 0) { rmFetchPrice(); rmState.countdown = 300; }
+  }, 1000);
+}
+
+// Ladda sparad state och initiera
+(function initRm() {
+  try {
+    const saved = localStorage.getItem('rmState');
+    if (saved) {
+      const s = JSON.parse(saved);
+      Object.assign(rmState, s);
+      const fields = { rmInputPrice:'price', rmInputLower:'lowerPct', rmInputUpper:'upperPct', rmInputPosition:'position', rmInputApr:'apr', rmInputWarn:'warnPct' };
+      Object.entries(fields).forEach(([id, key]) => {
+        const el = document.getElementById(id);
+        if (el) el.value = rmState[key];
+      });
+    }
+  } catch(e) {}
+  rmLog('Range Monitor startad', 'info');
+  rmRender();
+  rmStartTimer();
+  setTimeout(rmFetchPrice, 2000);
 })();
 
 </script>
