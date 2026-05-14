@@ -2255,8 +2255,8 @@ function calculate() {
   const fmtP = v => v.toFixed(2) + '%';
 
   $('earn24sub').textContent  = (posApy*100).toFixed(1) + '% netto/år';
-  $('earnWkSub').textContent  = fmtP(posApy/52) + ' per 7 dagar';
-  $('earnMoSub').textContent  = (posApy/12).toFixed(2) + '% per 30 dagar';
+  $('earnWkSub').textContent  = (posApy*100/52).toFixed(3) + '% per 7 dagar';
+  $('earnMoSub').textContent  = (posApy*100/12).toFixed(2) + '% per 30 dagar';
   $('g24').textContent  = fmtU(daily);
   $('gWk').textContent  = fmtU(weekly);
   $('gMo').textContent  = fmtU(monthly);
@@ -2290,7 +2290,7 @@ function calculate() {
   if (disc) disc.style.display = 'block';
 
   // Visa resultat-sektion
-  const rs = $('resultsSection');
+  const rs = $('resultSection');
   if (rs) rs.classList.remove('hidden');
 
   // Uppdatera protokoll-sektion
