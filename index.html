@@ -674,6 +674,12 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
     <div style="display:flex;flex-direction:column;gap:1px"><div style="font-size:20px;font-weight:800;letter-spacing:-.3px;color:var(--txt);line-height:1">DeFi Pro</div><div style="font-size:11px;color:var(--txt3);font-weight:500;letter-spacing:.3px">DeFi made simple</div></div>
   </div>
   <div class="header-right">
+    <select id="langSelect" onchange="setLang(this.value)" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;color:var(--txt);font-size:13px;cursor:pointer;outline:none">
+      <option value="sv">🇸🇪 Svenska</option>
+      <option value="en">🇬🇧 English</option>
+      <option value="no">🇳🇴 Norsk</option>
+      <option value="da">🇩🇰 Dansk</option>
+    </select>
     <button onclick="shareApp()" title="Dela DeFi Pro" style="background:none;border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;cursor:pointer;font-size:14px;color:var(--txt3)">🔗</button>
     <div class="status-chip chip-live" id="statusChip"><span class="dot-live"></span>&nbsp;LIVE</div>
     <span style="font-size:10px;color:var(--txt3);font-family:var(--mono)" id="lastUpd">—</span>
@@ -710,6 +716,7 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
   <button class="nav-btn" data-p="alerts"><span>🔔</span><span class="nav-label">Notiser</span></button>
   <button class="nav-btn" data-p="positions"><span>📍</span><span class="nav-label">Positioner</span></button>
   <button class="nav-btn" data-p="agent"><span>🤖</span><span class="nav-label">Agent</span></button>
+  <button class="nav-btn" data-p="il"><span>📉</span><span class="nav-label">IL & Hedge</span></button>
   <button class="nav-btn" data-p="guide" style="margin-left:auto;border-left:1px solid var(--border);padding-left:14px"><span>📖</span><span class="nav-label" style="color:var(--blue)">Guide</span></button>
 </div>
 <!-- MODE BAR -->
@@ -1243,6 +1250,163 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
   </div>
 
 </div><!-- end panel-agent -->
+
+
+<!-- ══════════ PANEL: IL & HEDGE ═══════════════════════════════ -->
+<div class="panel" id="panel-il">
+
+  <div style="font-size:24px;font-weight:800;margin-bottom:4px;font-family:var(--sans)">📉 Impermanent Loss & Hedging</div>
+  <div style="font-size:14px;color:var(--txt2);margin-bottom:24px">Beräkna din faktiska förlust och hur du skyddar din position</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="il-main-grid">
+
+    <!-- IL KALKYLATOR -->
+    <div class="card">
+      <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px;display:flex;align-items:center;gap:7px">📉 Impermanent Loss <span style="flex:1;height:1px;background:var(--border);display:block"></span></div>
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--txt3);display:block;margin-bottom:5px">Token A — ingångspris ($)</label>
+        <input type="number" id="ilPriceA0" placeholder="t.ex. 2000" min="0" style="width:100%">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--txt3);display:block;margin-bottom:5px">Token A — nuvarande pris ($)</label>
+        <input type="number" id="ilPriceA1" placeholder="t.ex. 3000" min="0" style="width:100%">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--txt3);display:block;margin-bottom:5px">Token B — ingångspris ($)</label>
+        <input type="number" id="ilPriceB0" placeholder="t.ex. 1" min="0" value="1" style="width:100%">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--txt3);display:block;margin-bottom:5px">Token B — nuvarande pris ($)</label>
+        <input type="number" id="ilPriceB1" placeholder="t.ex. 1" min="0" value="1" style="width:100%">
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;color:var(--txt3);display:block;margin-bottom:5px">Investerat kapital ($)</label>
+        <input type="number" id="ilCapital" placeholder="t.ex. 10000" min="0" value="10000" style="width:100%">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+        <button class="btn btn-primary" onclick="calcIL()">Beräkna IL</button>
+        <button class="btn btn-ghost" onclick="ilFillLive()">📡 Live-pris</button>
+      </div>
+
+      <div id="ilResult" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div style="text-align:center;padding:14px;background:var(--bg2);border-radius:var(--r)">
+            <div style="font-size:11px;color:var(--txt3);margin-bottom:4px">Impermanent Loss</div>
+            <div id="ilPct" style="font-size:24px;font-weight:800;color:var(--red)">0%</div>
+            <div id="ilUsd" style="font-size:12px;color:var(--txt3)">$0</div>
+          </div>
+          <div style="text-align:center;padding:14px;background:var(--bg2);border-radius:var(--r)">
+            <div style="font-size:11px;color:var(--txt3);margin-bottom:4px">Break-even APR</div>
+            <div id="ilBreakeven" style="font-size:24px;font-weight:800;color:var(--amber)">0%</div>
+            <div style="font-size:12px;color:var(--txt3)">fees behövs</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div style="text-align:center;padding:10px;background:var(--bg2);border-radius:var(--r)">
+            <div style="font-size:10px;color:var(--txt3)">Värde som LP</div>
+            <div id="ilLpValue" style="font-size:15px;font-weight:700">$0</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:var(--bg2);border-radius:var(--r)">
+            <div style="font-size:10px;color:var(--txt3)">Värde att hålla</div>
+            <div id="ilHoldValue" style="font-size:15px;font-weight:700">$0</div>
+          </div>
+        </div>
+        <div id="ilTip" style="font-size:13px;line-height:1.7;padding:12px;background:var(--bg2);border-left:3px solid var(--blue);border-radius:0 var(--r) var(--r) 0"></div>
+        <canvas id="ilChart" width="400" height="180" style="width:100%;margin-top:14px;border-radius:var(--r);background:var(--bg2)"></canvas>
+        <div style="display:flex;gap:14px;margin-top:6px;font-size:11px;color:var(--txt3)">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:2px;background:var(--red);display:inline-block"></span>IL-kurva</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:2px;background:var(--blue);display:inline-block"></span>Din position</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEDGING KALKYLATOR -->
+    <div class="card">
+      <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px;display:flex;align-items:center;gap:7px">🛡️ Hedging <span style="flex:1;height:1px;background:var(--border);display:block"></span></div>
+
+      <div style="padding:10px 13px;background:rgba(77,141,255,.08);border-left:3px solid var(--blue);border-radius:0 var(--r) var(--r) 0;font-size:12px;line-height:1.7;margin-bottom:14px;color:var(--txt2)">
+        💡 Hedging skyddar dig mot prisrörelser. Du shortar Token A på GMX eller dYdX för att bli delta-neutral.
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--txt3);display:block;margin-bottom:5px">LP-kapital ($)</label>
+        <input type="number" id="hedgeCapital" value="10000" min="0" style="width:100%">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--txt3);display:block;margin-bottom:5px">Token A-pris ($)</label>
+        <input type="number" id="hedgePrice" placeholder="t.ex. 2350" min="0" style="width:100%">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--txt3);display:block;margin-bottom:5px">Pool-andel Token A (%)</label>
+        <input type="number" id="hedgeRatio" value="50" min="1" max="99" style="width:100%">
+        <div style="font-size:11px;color:var(--txt3);margin-top:3px">50% = lika delar (standard)</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;color:var(--txt3);display:block;margin-bottom:5px">Strategi</label>
+        <select id="hedgeStrategy" style="width:100%">
+          <option value="delta">Delta-neutral (rekommenderas)</option>
+          <option value="half">50% hedge</option>
+          <option value="full">Full hedge (100%)</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+        <button class="btn btn-primary" onclick="calcHedge()">Beräkna hedge</button>
+        <button class="btn btn-ghost" onclick="hedgeFillLive()">📡 Live-pris</button>
+      </div>
+
+      <div id="hedgeResult" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div style="text-align:center;padding:14px;background:var(--bg2);border-radius:var(--r)">
+            <div style="font-size:11px;color:var(--txt3);margin-bottom:4px">Short-position</div>
+            <div id="hedgeShortAmt" style="font-size:20px;font-weight:800;color:var(--amber)">0 ETH</div>
+            <div id="hedgeShortUsd" style="font-size:12px;color:var(--txt3)">$0</div>
+          </div>
+          <div style="text-align:center;padding:14px;background:var(--bg2);border-radius:var(--r)">
+            <div style="font-size:11px;color:var(--txt3);margin-bottom:4px">Delta</div>
+            <div id="hedgeDelta" style="font-size:20px;font-weight:800;color:var(--green)">0.00</div>
+            <div style="font-size:12px;color:var(--txt3)">exponering</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+          <div style="text-align:center;padding:10px;background:var(--bg2);border-radius:var(--r)">
+            <div style="font-size:10px;color:var(--txt3)">Skydd vid -20%</div>
+            <div id="hedgeDown20" style="font-size:14px;font-weight:700;color:var(--green)">$0</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:var(--bg2);border-radius:var(--r)">
+            <div style="font-size:10px;color:var(--txt3)">Kostnad/dag</div>
+            <div id="hedgeCostDay" style="font-size:14px;font-weight:700;color:var(--amber)">$0</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:var(--bg2);border-radius:var(--r)">
+            <div style="font-size:10px;color:var(--txt3)">Plattform</div>
+            <div style="font-size:12px;font-weight:700;color:var(--blue)">GMX / dYdX</div>
+          </div>
+        </div>
+        <div id="hedgeTip" style="font-size:13px;line-height:1.7;padding:12px;background:var(--bg2);border-left:3px solid var(--purple);border-radius:0 var(--r) var(--r) 0"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IL Referenstabell -->
+  <div class="card" style="margin-top:20px">
+    <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px">📊 IL-referenstabell</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="text-align:left;padding:8px 12px;color:var(--txt3);font-size:11px;font-weight:700">Prisrörelse</th>
+            <th style="text-align:right;padding:8px 12px;color:var(--txt3);font-size:11px;font-weight:700">IL %</th>
+            <th style="text-align:right;padding:8px 12px;color:var(--txt3);font-size:11px;font-weight:700">IL på $10 000</th>
+            <th style="text-align:right;padding:8px 12px;color:var(--txt3);font-size:11px;font-weight:700">Break-even APR</th>
+            <th style="text-align:left;padding:8px 12px;color:var(--txt3);font-size:11px;font-weight:700">Risk</th>
+          </tr>
+        </thead>
+        <tbody id="ilTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- end panel-il -->
 
 <!-- ══════════ PANEL: GUIDE ════════════════════════════════ -->
 <div class="panel" id="panel-guide">
@@ -2821,109 +2985,88 @@ function renderPortfolio() {
   $('portSum').classList.remove('hidden');
 }
 async function loadOnchain() {
-  const el = $('onchainList');
-  if (!el) return;
-  el.innerHTML = '<span class="spin"></span> Hämtar positioner...';
+  const el = document.getElementById('onchainList');
+  if (!el || !wallet.addr) return;
+  el.innerHTML = '<div style="text-align:center;padding:16px"><span class="spin"></span><div style="margin-top:8px;font-size:13px;color:var(--txt3)">Hämtar positioner...</div></div>';
+  const addr = wallet.addr.toLowerCase();
+  const alchemyKey = localStorage.getItem('alchemyKey') || '';
+  let html = '', found = false;
+
+  // Försök 1: DefiLlama
   try {
-    const r = await fetch('https://api.llama.fi/getUserPositions?address=' + wallet.addr.toLowerCase());
-    const d = await r.json();
-    const pos = (d.positions || d.data || []).filter(p => (p.tvlUsd||0) > 10);
-    if (!pos.length) { el.innerHTML = '<div class="tip-box"><div class="tip-icon">ℹ️</div><div>Inga aktiva LP-positioner hittades. Data kan ta upp till 1h att uppdateras.</div></div>'; return; }
-    el.innerHTML = pos.slice(0,15).map(p => {
-      const proto = getProto(p.protocol || p.project || '');
-      const inRange = p.inRange !== false;
-      return `<div class="pos-card" style="border-color:${inRange?'rgba(0,214,143,.2)':'rgba(255,77,109,.2)'}"><div><div style="font-weight:700;font-size:14px">${proto.icon} ${p.symbol||p.pair||'Position'}</div><div style="font-size:11px;color:var(--txt3);margin-top:2px">${proto.name} · ${p.chain||'ETH'} · $${Math.round(p.tvlUsd||0).toLocaleString()}</div></div><span style="font-size:13px;font-weight:700;color:${inRange?'var(--green)':'var(--red)'}">${inRange?'✓ In-range':'✗ Ur range'}</span></div>`;
-    }).join('');
-  } catch(e) { el.innerHTML = '<div class="tip-box"><div class="tip-icon">⚠️</div><div>Demo-positioner visas. Live on-chain data kräver indexeringstjänst.</div></div><div class="pos-card" style="border-color:rgba(0,214,143,.2)"><div><div style="font-weight:700">🦄 WETH/USDC</div><div style="font-size:11px;color:var(--txt3)">Uniswap V3 · Arbitrum · $12 500</div></div><span class="green bold">✓ In-range</span></div>'; }
-}
-
-// ── GOAL CALCULATOR ──────────────────────────────────────────
-function syncSlider() { const s=$('goalSlider'); if(s) s.value=Math.min(10000,parseFloat($('goalMo').value)||500); }
-function calcGoal() {
-  const capital = parseFloat($('goalCap').value) || 25000;
-  const monthly = parseFloat($('goalMo').value)  || 500;
-  syncSlider();
-  const reqAPR = (monthly * 12 / capital) * 100;
-  $('goalResults').classList.remove('hidden');
-  $('goalReqAPR').textContent   = reqAPR.toFixed(1) + '%';
-  $('goalMoShow').textContent   = fmtE(monthly);
-  $('goalCapShow').textContent  = '$' + capital.toLocaleString();
-  $('goalD').textContent = fmtE(monthly/30);
-  $('goalW').textContent = fmtE(monthly/4.33);
-  $('goalM').textContent = fmtE(monthly);
-  $('goalY').textContent = fmtE(monthly*12);
-
-  // Feasibility
-  let icon, color, title, desc;
-  if      (reqAPR <= 10)  { icon='✅'; color='var(--green)'; title='Mycket realistiskt'; desc='Under 10% APR uppnås lätt med Aave (4-8%) eller Uniswap V3 ETH/USDC med bred range. Mycket låg risk.'; }
-  else if (reqAPR <= 25)  { icon='👍'; color='var(--blue)';  title='Realistiskt med rätt strategi'; desc=reqAPR.toFixed(1)+'% APR är uppnåeligt med aktiv LP i ETH/USDC på Arbitrum med balanserad range.'; }
-  else if (reqAPR <= 60)  { icon='⚠️'; color='var(--amber)'; title='Möjligt men kräver aktiv hantering'; desc='Kräver tight range och regelbunden rebalansering. Hög IL-risk vid prisrörelser.'; }
-  else if (reqAPR <= 150) { icon='🔴'; color='var(--red)';   title='Aggressivt mål — hög risk'; desc='Kan uppnås under bull markets med ultra-tight range, men orealistiskt konstant.'; }
-  else                    { icon='❌'; color='var(--red)';   title='Orealistiskt mål'; desc=`För att nå ${fmtE(monthly)}/mån med 30% APR behöver du $${Math.ceil(monthly*12/0.3).toLocaleString()} i kapital.`; }
-
-  $('goalFeasCard').style.borderColor = color;
-  $('goalFeasContent').innerHTML = `<div style="display:flex;gap:14px;align-items:flex-start"><div style="font-size:28px">${icon}</div><div><div style="font-size:15px;font-weight:700;color:${color};margin-bottom:5px">${title}</div><div style="font-size:13px;color:var(--txt2);line-height:1.7">${desc}</div></div></div>`;
-
-  // Strategy
-  let pair, chain, fee, riskLvl, mgmtTip;
-  if      (reqAPR <= 8)  { pair='USDC/USDT'; chain='Arbitrum'; fee='0.01%'; riskLvl='🛡️ Trygg'; mgmtTip='Full range — minimal IL'; }
-  else if (reqAPR <= 20) { pair='ETH/USDC';  chain='Arbitrum'; fee='0.05%'; riskLvl='⚖️ Balanserad'; mgmtTip='±20% range, rebalansera månadsvis'; }
-  else if (reqAPR <= 50) { pair='ETH/USDC eller SOL/USDC'; chain='Arbitrum/Solana'; fee='0.05-0.30%'; riskLvl='🚀 Aggressiv'; mgmtTip='±10% range, rebalansera veckovis'; }
-  else                   { pair='SOL/USDC eller SUI/USDC'; chain='Solana/Sui'; fee='0.25%'; riskLvl='💀 Extremt aggressiv'; mgmtTip='±5% range, daglig övervakning'; }
-
-  $('goalStrategy').innerHTML = [
-    {icon:'💱',lbl:'Rekommenderat par',val:pair},
-    {icon:'⛓️',lbl:'Rekommenderad kedja',val:chain},
-    {icon:'💸',lbl:'Fee-tier',val:fee},
-    {icon:'🎯',lbl:'Risknivå',val:riskLvl},
-    {icon:'🔄',lbl:'Hantering',val:mgmtTip},
-    {icon:'📊',lbl:'Nödvändig APR',val:reqAPR.toFixed(1)+'%'},
-  ].map(s => `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;align-items:flex-start;gap:10px"><span style="font-size:18px">${s.icon}</span><div><div style="font-size:10px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px">${s.lbl}</div><div style="font-size:13px;font-weight:600">${s.val}</div></div></div>`).join('');
-
-  // Range
-  const P = S.live.prices['WETH'] || 2200;
-  const refHW = reqAPR <= 20 ? 0.25 : reqAPR <= 50 ? 0.15 : 0.07;
-  const rLo = P*(1-refHW), rHi = P*(1+refHW);
-  $('goalRange').innerHTML = `<div class="grid-3" style="margin-bottom:10px"><div style="background:var(--bg2);border:1px solid rgba(255,77,109,.25);border-radius:var(--r);padding:12px;text-align:center"><div style="font-size:10px;color:var(--red);font-weight:700;margin-bottom:4px">NEDRE</div><div class="mono bold red" style="font-size:17px">${fmtP(rLo)}</div><div style="font-size:10px;color:var(--txt3)">−${(refHW*100).toFixed(0)}%</div></div><div style="background:var(--bblue);border:1px solid rgba(77,141,255,.2);border-radius:var(--r);padding:12px;text-align:center"><div style="font-size:10px;color:var(--blue);font-weight:700;margin-bottom:4px">NULÄGE</div><div class="mono bold blue" style="font-size:17px">${fmtP(P)}</div><div style="font-size:10px;color:var(--txt3)">ETH/USDC</div></div><div style="background:var(--bg2);border:1px solid rgba(0,214,143,.25);border-radius:var(--r);padding:12px;text-align:center"><div style="font-size:10px;color:var(--green);font-weight:700;margin-bottom:4px">ÖVRE</div><div class="mono bold green" style="font-size:17px">${fmtP(rHi)}</div><div style="font-size:10px;color:var(--txt3)">+${(refHW*100).toFixed(0)}%</div></div></div>`;
-
-  // Matching pools
-  const pEl = $('goalPools');
-  if (S.live.pools.length) {
-    const matches = S.live.pools
-      .filter(p => (p.apy||0) >= reqAPR*0.7 && (p.tvlUsd||0) > 500000)
-      .filter(p => GOOD.some(t => (p.symbol||'').toUpperCase().includes(t)))
-      .sort((a,b) => Math.abs(a.apy-reqAPR)-Math.abs(b.apy-reqAPR))
-      .slice(0, 5);
-    if (!matches.length) { pEl.innerHTML = '<div class="warn-box">Inga pooler med ' + reqAPR.toFixed(0) + '%+ APY hittades. Sänk målet eller öka kapitalet.</div>'; }
-    else {
-      pEl.innerHTML = matches.map(p => {
-        const proto  = getProto(p.project);
-        const mo     = capital * (p.apy||0)/100/12;
-        const meets  = mo >= monthly;
-        const key    = storePool({symbol:p.symbol,project:p.project,chain:p.chain,apy:p.apy,tvlUsd:p.tvlUsd});
-        return `<div data-simkey="${key}" style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:var(--bg2);border:1.5px solid ${meets?'rgba(0,214,143,.25)':'var(--border)'};border-radius:var(--r);margin-bottom:7px;cursor:pointer">
-          <div><div style="font-weight:700;font-size:13px">${proto.icon} ${p.symbol} <span style="font-size:11px;color:var(--txt3)">· ${p.project} · ${p.chain}</span></div><div style="font-size:11px;color:var(--txt3);margin-top:2px">TVL: ${fmtU(p.tvlUsd||0)} · ${fmtE(mo)}/mån</div></div>
-          <div style="display:flex;align-items:center;gap:10px"><div style="text-align:right"><div class="mono bold" style="font-size:16px;color:${meets?'var(--green)':'var(--amber)'}">${(p.apy||0).toFixed(1)}%</div><div style="font-size:10px;color:var(--txt3)">${meets?'✅ Möter målet':'⚠ Under målet'}</div></div><a href="${proto.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="pool-open-btn">${proto.icon} Öppna ↗</a></div>
-        </div>`;
-      }).join('');
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch('https://api.llama.fi/getUserPositions?address=' + addr, { signal: ctrl.signal });
+    if (r.ok) {
+      const d = await r.json();
+      const pos = (d.positions || d.data || []).filter(p => (p.tvlUsd||0) > 10);
+      if (pos.length > 0) {
+        found = true;
+        html += '<div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">LP-Positioner via DefiLlama</div>';
+        html += pos.slice(0,15).map(p => {
+          const inRange = !p.priceMin || (S.live.prices['WETH'] >= (p.priceMin||0) && S.live.prices['WETH'] <= (p.priceMax||999999));
+          const rc = inRange ? 'var(--green)' : 'var(--red)';
+          const rt = inRange ? '✓ In-range' : '✗ Ur range';
+          return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">' +
+            '<div><div style="font-weight:700">' + (p.symbol||'LP') + '</div>' +
+            '<div style="font-size:12px;color:var(--txt3)">' + (p.project||'') + ' · ' + (p.chain||'') + '</div></div>' +
+            '<div style="text-align:right"><div style="font-weight:700">$' + ((p.tvlUsd||0).toLocaleString('sv-SE',{maximumFractionDigits:0})) + '</div>' +
+            '<div style="font-size:12px;color:' + rc + '">' + rt + '</div></div></div>';
+        }).join('');
+      }
     }
-  } else pEl.innerHTML = '<div style="color:var(--txt3)">Öppna Heta Pooler-fliken för att ladda pooldata.</div>';
-}
-function applyGoalToCalc() {
-  if ($('capital')) $('capital').value = $('goalCap').value;
-  const reqAPR = parseFloat($('goalMo').value)*12 / parseFloat($('goalCap').value) * 100;
-  document.querySelectorAll('.risk-card').forEach(b => b.classList.remove('on'));
-  const r = reqAPR > 40 ? 'aggressive' : reqAPR > 15 ? 'balanced' : 'conservative';
-  document.querySelector('[data-risk="'+r+'"]')?.classList.add('on');
-  S.risk = r;
-  document.querySelector('[data-p="calc"]').click();
-  calculate();
+  } catch(e) {}
+
+  // Försök 2: Alchemy token balances
+  if (alchemyKey && !found) {
+    try {
+      const ctrl2 = new AbortController();
+      setTimeout(() => ctrl2.abort(), 8000);
+      const r2 = await fetch('https://eth-mainnet.g.alchemy.com/v2/' + alchemyKey + '/getTokenBalances/' + addr, { signal: ctrl2.signal });
+      if (r2.ok) {
+        const d2 = await r2.json();
+        const tokens = (d2.result?.tokenBalances || []).filter(t => t.tokenBalance && t.tokenBalance !== '0x0000000000000000000000000000000000000000000000000000000000000000');
+        if (tokens.length > 0) {
+          found = true;
+          html += '<div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Token-balans via Alchemy</div>';
+          html += '<div style="font-size:13px;color:var(--txt2);padding:12px;background:var(--bg2);border-radius:var(--r)">Hittade ' + tokens.length + ' tokens. Detaljerad data hämtas...</div>';
+        }
+      }
+    } catch(e) {}
+  }
+
+  if (!found) {
+    html = '<div style="text-align:center;padding:24px;background:var(--bg2);border-radius:var(--r2);border:1px solid var(--border)">' +
+      '<div style="font-size:32px;margin-bottom:10px">📊</div>' +
+      '<div style="font-weight:700;margin-bottom:8px">Inga positioner hittades</div>' +
+      '<div style="font-size:13px;color:var(--txt2);margin-bottom:14px">DefiLlama hittade inga aktiva LP-positioner. Data uppdateras upp till 1h efter transaktion.</div>' +
+      '</div>';
+  }
+
+  // Alchemy API-input
+  html += '<div style="margin-top:16px;padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2)">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--txt3);margin-bottom:8px;display:flex;justify-content:space-between">' +
+    '<span>🔑 Alchemy API (valfritt, gratis)</span>' +
+    '<a href="https://dashboard.alchemy.com" target="_blank" style="color:var(--blue);font-size:10px">Skaffa gratis ↗</a></div>' +
+    '<div style="display:flex;gap:7px">' +
+    '<input type="text" id="alchemyKeyInput" placeholder="Klistra in API-nyckel..." value="' + (alchemyKey ? '••••••••' : '') + '" style="flex:1;font-size:12px;font-family:monospace">' +
+    '<button onclick="saveAlchemyKey()" class="btn btn-primary btn-sm" style="white-space:nowrap">Spara</button>' +
+    '</div>' +
+    '<div style="font-size:10px;color:var(--txt3);margin-top:5px">Gratis på dashboard.alchemy.com — ger snabbare och mer exakta positioner</div>' +
+    '</div>';
+
+  el.innerHTML = html;
 }
 
-// ── ALERTS ───────────────────────────────────────────────────
-$('notifInfo').innerHTML = 'Notification' in window
-  ? '<div class="info-box mb-12" style="margin-bottom:12px"><span class="dot-live" style="margin-right:6px"></span>Webbläsarnotiser stöds ✓</div>'
-  : '<div class="warn-box" style="margin-bottom:12px">⚠ Din webbläsare stöder inte notiser.</div>';
+function saveAlchemyKey() {
+  const val = (document.getElementById('alchemyKeyInput')?.value || '').trim();
+  if (!val || val.includes('•')) return;
+  localStorage.setItem('alchemyKey', val);
+  showNotif('Alchemy API-nyckel sparad!', 'success');
+  setTimeout(() => loadOnchain(), 500);
+}
+
+
 async function startAlert() {
   if (!('Notification' in window)) return;
   if (await Notification.requestPermission() !== 'granted') { addLog('❌ Notiser blockerades.'); return; }
@@ -3420,6 +3563,267 @@ function rmStartTimer() {
   rmRender();
   rmStartTimer();
   setTimeout(rmFetchPrice, 2000);
+})();
+
+
+// ═══════════════════════════════════════════════════════════════
+// IL & HEDGING KALKYLATORER
+// ═══════════════════════════════════════════════════════════════
+
+function renderILTable() {
+  const rows = [
+    {ratio:1.1,label:'+10% / -9%'},
+    {ratio:1.25,label:'+25% / -20%'},
+    {ratio:1.5,label:'+50% / -33%'},
+    {ratio:2.0,label:'+100% / -50%'},
+    {ratio:3.0,label:'+200% / -67%'},
+    {ratio:4.0,label:'+300% / -75%'},
+    {ratio:5.0,label:'+400% / -80%'},
+  ];
+  const tbody = document.getElementById('ilTable');
+  if (!tbody) return;
+  tbody.innerHTML = rows.map(r => {
+    const il = (2*Math.sqrt(r.ratio)/(1+r.ratio)-1)*100;
+    const ilUsd = Math.abs(il/100*10000);
+    const color = Math.abs(il)<1?'var(--green)':Math.abs(il)<5?'var(--amber)':'var(--red)';
+    const badge = Math.abs(il)<1?'✅ Minimal':Math.abs(il)<5?'⚠️ Måttlig':'🔴 Hög';
+    return '<tr style="border-bottom:1px solid rgba(255,255,255,.04)">' +
+      '<td style="padding:10px 12px;font-weight:600">'+r.label+'</td>' +
+      '<td style="padding:10px 12px;text-align:right;color:'+color+';font-weight:700">'+il.toFixed(2)+'%</td>' +
+      '<td style="padding:10px 12px;text-align:right;color:'+color+'">-$'+ilUsd.toFixed(0)+'</td>' +
+      '<td style="padding:10px 12px;text-align:right;color:var(--amber)">'+Math.abs(il).toFixed(2)+'% APR</td>' +
+      '<td style="padding:10px 12px">'+badge+'</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function ilFillLive() {
+  const p = S.live.prices['WETH'];
+  if (p) {
+    document.getElementById('ilPriceA1').value = p.toFixed(2);
+    if (!document.getElementById('ilPriceA0').value) {
+      document.getElementById('ilPriceA0').value = (p*0.8).toFixed(2);
+    }
+  }
+  document.getElementById('ilPriceB0').value = '1';
+  document.getElementById('ilPriceB1').value = '1';
+}
+
+function hedgeFillLive() {
+  const p = S.live.prices['WETH'];
+  if (p) document.getElementById('hedgePrice').value = p.toFixed(2);
+}
+
+function calcIL() {
+  const p0a = parseFloat(document.getElementById('ilPriceA0').value);
+  const p1a = parseFloat(document.getElementById('ilPriceA1').value);
+  const p0b = parseFloat(document.getElementById('ilPriceB0').value)||1;
+  const p1b = parseFloat(document.getElementById('ilPriceB1').value)||1;
+  const capital = parseFloat(document.getElementById('ilCapital').value)||10000;
+  if (!p0a||!p1a) { showNotif('Ange ingångspris och nuvarande pris','error'); return; }
+  const ratio = (p1a/p0a)/(p1b/p0b);
+  const il = (2*Math.sqrt(ratio)/(1+ratio))-1;
+  const ilPct = il*100;
+  const holdValue = capital*((p1a/p0a+p1b/p0b)/2);
+  const lpValue = holdValue*(1+il);
+  const ilUsd = lpValue-holdValue;
+  const breakeven = Math.abs(ilPct);
+  document.getElementById('ilResult').style.display='block';
+  document.getElementById('ilPct').textContent=ilPct.toFixed(2)+'%';
+  document.getElementById('ilPct').style.color=ilPct<-1?'var(--red)':'var(--green)';
+  document.getElementById('ilUsd').textContent='$'+ilUsd.toFixed(2);
+  document.getElementById('ilLpValue').textContent='$'+lpValue.toFixed(0);
+  document.getElementById('ilHoldValue').textContent='$'+holdValue.toFixed(0);
+  document.getElementById('ilBreakeven').textContent=breakeven.toFixed(2)+'%';
+  const tipEl = document.getElementById('ilTip');
+  if (Math.abs(ilPct)<0.5) tipEl.innerHTML='✅ <strong>Minimal IL.</strong> Du behöver bara '+breakeven.toFixed(2)+'% APR för att täcka förlusten.';
+  else if (Math.abs(ilPct)<5) tipEl.innerHTML='⚠️ <strong>Måttlig IL.</strong> Du förlorade '+Math.abs(ilPct).toFixed(2)+'% vs att hålla. Behöver '+breakeven.toFixed(2)+'% APR.';
+  else tipEl.innerHTML='🔴 <strong>Hög IL.</strong> Stor prisrörelse kostade dig '+Math.abs(ilPct).toFixed(2)+'%. Överväg hedging →';
+  drawILChart(ratio);
+}
+
+function drawILChart(currentRatio) {
+  const canvas = document.getElementById('ilChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#111525';
+  ctx.fillRect(0,0,W,H);
+  const pad={top:20,right:20,bottom:30,left:50};
+  const cW=W-pad.left-pad.right, cH=H-pad.top-pad.bottom;
+  const ratios=[];
+  for(let r=0.1;r<=5;r+=0.1) ratios.push(parseFloat(r.toFixed(1)));
+  const ilVals=ratios.map(r=>(2*Math.sqrt(r)/(1+r)-1)*100);
+  const minIL=Math.min(...ilVals), maxIL=2;
+  const xS=r=>pad.left+((r-0.1)/(5-0.1))*cW;
+  const yS=v=>pad.top+((maxIL-v)/(maxIL-minIL))*cH;
+  ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.top+(i/4)*cH;ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(W-pad.right,y);ctx.stroke();}
+  ctx.fillStyle='rgba(180,180,180,.6)';ctx.font='10px sans-serif';ctx.textAlign='right';
+  for(let i=0;i<=4;i++){const v=maxIL-(i/4)*(maxIL-minIL);ctx.fillText(v.toFixed(0)+'%',pad.left-4,pad.top+(i/4)*cH+4);}
+  ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  const zY=yS(0);ctx.beginPath();ctx.moveTo(pad.left,zY);ctx.lineTo(W-pad.right,zY);ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle='#ff5555';ctx.lineWidth=2.5;ctx.beginPath();
+  ratios.forEach((r,i)=>{const x=xS(r),y=yS(ilVals[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.stroke();
+  ctx.fillStyle='rgba(255,85,85,.08)';ctx.beginPath();
+  ratios.forEach((r,i)=>{const x=xS(r),y=yS(ilVals[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.lineTo(xS(ratios[ratios.length-1]),yS(0));ctx.lineTo(xS(ratios[0]),yS(0));ctx.closePath();ctx.fill();
+  if(currentRatio>=0.1&&currentRatio<=5){
+    const curIL=(2*Math.sqrt(currentRatio)/(1+currentRatio)-1)*100;
+    const cx=xS(currentRatio),cy=yS(curIL);
+    ctx.fillStyle='#ff5555';ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='white';ctx.font='bold 11px sans-serif';ctx.textAlign='center';
+    ctx.fillText(curIL.toFixed(1)+'%',cx,cy-10);
+  }
+  ctx.fillStyle='rgba(180,180,180,.6)';ctx.font='10px sans-serif';ctx.textAlign='center';
+  [1,2,3,4,5].forEach(r=>ctx.fillText(r+'x',xS(r),H-pad.bottom+15));
+}
+
+function calcHedge() {
+  const capital=parseFloat(document.getElementById('hedgeCapital').value)||10000;
+  const price=parseFloat(document.getElementById('hedgePrice').value);
+  const ratio=parseFloat(document.getElementById('hedgeRatio').value)/100||0.5;
+  const strategy=document.getElementById('hedgeStrategy').value;
+  if(!price){showNotif('Ange Token A-pris','error');return;}
+  const tokenAValue=capital*ratio;
+  const tokenAAmount=tokenAValue/price;
+  const lpDelta=tokenAAmount*0.5;
+  let hedgeAmt, deltaResult;
+  if(strategy==='delta'){hedgeAmt=lpDelta;deltaResult=0;}
+  else if(strategy==='half'){hedgeAmt=lpDelta*0.5;deltaResult=lpDelta*0.5*price;}
+  else{hedgeAmt=tokenAAmount;deltaResult=-lpDelta*price;}
+  const hedgeUsd=hedgeAmt*price;
+  const protection=hedgeAmt*price*0.20;
+  const costPerDay=hedgeUsd*0.0001;
+  document.getElementById('hedgeResult').style.display='block';
+  document.getElementById('hedgeShortAmt').textContent=hedgeAmt.toFixed(4)+' tokens';
+  document.getElementById('hedgeShortUsd').textContent='$'+hedgeUsd.toFixed(0);
+  document.getElementById('hedgeDelta').textContent=deltaResult===0?'≈ 0 (neutral)':'$'+Math.abs(deltaResult).toFixed(0);
+  document.getElementById('hedgeDelta').style.color=deltaResult===0?'var(--green)':'var(--amber)';
+  document.getElementById('hedgeDown20').textContent='+$'+protection.toFixed(0);
+  document.getElementById('hedgeCostDay').textContent='$'+costPerDay.toFixed(2);
+  const tipEl=document.getElementById('hedgeTip');
+  if(strategy==='delta') tipEl.innerHTML='🛡️ <strong>Delta-neutral:</strong> Shorta '+hedgeAmt.toFixed(4)+' tokens (~$'+hedgeUsd.toFixed(0)+') på GMX eller dYdX. Skyddad mot prisrörelse. Funding-kostnad: ~$'+costPerDay.toFixed(2)+'/dag.';
+  else if(strategy==='half') tipEl.innerHTML='⚖️ <strong>50% hedge:</strong> Partiellt skydd. Behåller uppåtexponering men halvt skyddad vid fall.';
+  else tipEl.innerHTML='🔒 <strong>Full hedge:</strong> Maximalt skydd. Du tjänar bara LP-fees. Kostnad: ~$'+costPerDay.toFixed(2)+'/dag.';
+}
+
+// Init IL-tabell
+setTimeout(renderILTable, 800);
+// Responsiv CSS
+
+
+// ═══════════════════════════════════════════════════════════════
+// SPRÅKVÄLJARE
+// ═══════════════════════════════════════════════════════════════
+
+const LANGS = {
+  sv: {
+    kalkylator:'Kalkylator', pooler:'Heta Pooler', marknad:'Marknad',
+    portfolio:'Portfolio', aave:'Aave', mal:'Avkastningsmål',
+    notiser:'Notiser', il:'IL & Hedge', positioner:'Positioner',
+    agent:'Agent', guide:'Guide',
+    anslut:'Anslut plånbok', live:'LIVE',
+    tip:'Så här fungerar det:',
+    tipText:'Välj vilket kryptoppar du vill investera i, ange ditt kapital, välj risknivå och tryck Beräkna — du ser direkt hur mycket du kan tjäna per dag, vecka och månad.',
+    berakna:'Beräkna',
+  },
+  en: {
+    kalkylator:'Calculator', pooler:'Hot Pools', marknad:'Market',
+    portfolio:'Portfolio', aave:'Aave', mal:'Yield Goals',
+    notiser:'Alerts', il:'IL & Hedge', positioner:'Positions',
+    agent:'Agent', guide:'Guide',
+    anslut:'Connect Wallet', live:'LIVE',
+    tip:'How it works:',
+    tipText:'Select a crypto pair, enter your capital, choose risk level and click Calculate — see instantly how much you can earn per day, week and month.',
+    berakna:'Calculate',
+  },
+  no: {
+    kalkylator:'Kalkulator', pooler:'Hete Pooler', marknad:'Marked',
+    portfolio:'Portefølje', aave:'Aave', mal:'Avkastningsmål',
+    notiser:'Varsler', il:'IL & Hedge', positioner:'Posisjoner',
+    agent:'Agent', guide:'Guide',
+    anslut:'Koble lommebok', live:'LIVE',
+    tip:'Slik fungerer det:',
+    tipText:'Velg kryptopar, skriv inn kapital, velg risikonivå og trykk Beregn.',
+    berakna:'Beregn',
+  },
+  da: {
+    kalkylator:'Beregner', pooler:'Varme Pools', marknad:'Marked',
+    portfolio:'Portefølje', aave:'Aave', mal:'Afkastmål',
+    notiser:'Notiser', il:'IL & Hedge', positioner:'Positioner',
+    agent:'Agent', guide:'Guide',
+    anslut:'Tilslut pung', live:'LIVE',
+    tip:'Sådan fungerer det:',
+    tipText:'Vælg kryptopar, indtast kapital, vælg risikoniveau og klik Beregn.',
+    berakna:'Beregn',
+  }
+};
+
+let currentLang = localStorage.getItem('lang') || 'sv';
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+  const t = LANGS[lang] || LANGS.sv;
+
+  // Nav labels
+  const navMap = [
+    ['data-p="calc"','kalkylator'],['data-p="pools"','pooler'],
+    ['data-p="market"','marknad'],['data-p="portfolio"','portfolio'],
+    ['data-p="aave"','aave'],['data-p="goal"','mal'],
+    ['data-p="alerts"','notiser'],['data-p="il"','il'],
+    ['data-p="positions"','positioner'],['data-p="agent"','agent'],
+    ['data-p="guide"','guide'],
+  ];
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    const p = btn.dataset.p;
+    const lbl = btn.querySelector('.nav-label');
+    if (!lbl) return;
+    const map = {
+      calc:'kalkylator',pools:'pooler',market:'marknad',
+      portfolio:'portfolio',aave:'aave',goal:'mal',
+      alerts:'notiser',il:'il',positions:'positioner',
+      agent:'agent',guide:'guide'
+    };
+    const key = map[p];
+    if (key && t[key]) lbl.textContent = t[key];
+  });
+
+  // Anslut-knapp
+  const connectBtn = document.getElementById('connectBtn');
+  if (connectBtn && !connectBtn._connected) connectBtn.textContent = '🔗 ' + t.anslut;
+
+  // Tip-box
+  const tipBox = document.querySelector('.tip-box');
+  if (tipBox) {
+    const strong = tipBox.querySelector('strong');
+    if (strong) strong.textContent = t.tip;
+    const textNode = tipBox.lastChild;
+    if (textNode && textNode.nodeType === 3) textNode.textContent = ' ' + t.tipText;
+  }
+
+  // Beräkna-knapp
+  const calcBtn = document.querySelector('[onclick="calculate()"]');
+  if (calcBtn) calcBtn.textContent = '⚡ ' + t.berakna;
+
+  // LIVE chip
+  const chipEl = document.getElementById('statusChip');
+  if (chipEl) chipEl.innerHTML = '<span class="dot-live"></span>&nbsp;' + t.live;
+
+  // Uppdatera select
+  const sel = document.getElementById('langSelect');
+  if (sel) sel.value = lang;
+}
+
+// Init språk
+(function initLang() {
+  const saved = localStorage.getItem('lang') || 'sv';
+  const sel = document.getElementById('langSelect');
+  if (sel) sel.value = saved;
+  if (saved !== 'sv') setLang(saved);
 })();
 
 </script>
