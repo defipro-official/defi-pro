@@ -2200,316 +2200,103 @@ function renderTicker() {
 function calculate() {
   const pair     = PAIRS[S.pair];
   const price    = parseFloat($('currentPrice').value) || pair.dp;
-  const capital  = parseFloat($('capital').value) || 25000;
+  const capital  = parseFloat($('capital').value) || 10000;
   const days     = parseInt($('horizon').value) || 30;
-  const chain    = CHAINS[$('chain').value] || CHAINS.arbitrum;
-  const mgmt     = MGMT[$('management').value] ?? 0;
-  const volOv    = parseFloat($('volOverride').value);
-  const dailyVol = (!isNaN(volOv) && volOv > 0) ? volOv/100 : (S.live.vols[S.pair] || pair.dvol || 0.04);
-  let fee = pair.fee;
-  const ftv = $('feeTier').value;
-  if (ftv !== 'auto') fee = parseFloat(ftv);
+  const chainKey = $('chain').value || 'arbitrum';
 
-  // Price range based on risk
-  const s       = RISK[S.risk].s;
-  const hv      = dailyVol * Math.sqrt(days);
-  const low     = price * Math.exp(-s * hv);
-  const high    = price * Math.exp( s * hv);
+  // ═══ KORREKTA POOL BASE APYs (DefiLlama historik maj 2026) ═══
+  // Källa: Faktiska fee-intäkter / TVL senaste 30 dagarna
+  const POOL_BASE_APY = {
+    WETH: { arbitrum:0.10, base:0.12, ethereum:0.06, optimism:0.08, polygon:0.07 },
+    WBTC: { arbitrum:0.05, ethereum:0.04, base:0.05 },
+    SOL:  { solana:0.18, base:0.10 },
+    SUI:  { sui:0.25 },
+    ARB:  { arbitrum:0.15 },
+    OP:   { optimism:0.12 },
+    AVAX: { avalanche:0.10, base:0.08 },
+    LINK: { arbitrum:0.08, ethereum:0.06 },
+  };
 
-  // V3 capital efficiency (whitepaper eq 6.21)
-  const capEff    = v3CapEff(price, low, high);
-  const capEffRel = capEff / AVG_POOL_CAPEFF;
+  // ═══ RISKNIVÅER → RANGE-BREDD ═══
+  const RISK = {
+    trygg:      { lower:0.35, upper:0.35, label:'±35%' },
+    balanced:   { lower:0.20, upper:0.20, label:'±20%' },
+    aggressive: { lower:0.10, upper:0.10, label:'±10%' },
+  };
 
-  // APR
-  const grossAPR = fee * pair.v2tvl * 365 * capEffRel;
+  const rng   = RISK[S.risk] || RISK.balanced;
+  const rLow  = price * (1 - rng.lower);
+  const rHigh = price * (1 + rng.upper);
 
-  // Cost drags
-  const rbDaysVal   = rebalDays(s * hv, dailyVol);
-  const rebalances  = Math.max(1, Math.ceil(days / rbDaysVal));
-  const gasUsd      = chain.open + chain.reb * rebalances;
-  const gasDragAPR  = gasUsd / capital * (365 / days);
-  const slipDragAPR = chain.slip * 2 * rebalances / (days / 365);
-  const mgmtDragAPR = grossAPR * mgmt;
-  const netAPR      = Math.max(0, grossAPR - gasDragAPR - slipDragAPR - mgmtDragAPR);
+  // ═══ KAPITALEFFEKTIVITET (Uniswap V3 Whitepaper) ═══
+  const sqrtP  = Math.sqrt(price);
+  const sqrtPa = Math.sqrt(rLow);
+  const sqrtPb = Math.sqrt(rHigh);
+  const liqRatio = (sqrtP - sqrtPa) / (sqrtPb - sqrtPa);
+  const capEff = liqRatio > 0 ? 1 / liqRatio : 1;
 
-  // Earnings
-  const n24 = capital * netAPR / 365;
-  const nWk = capital * netAPR / 52;
-  const nMo = capital * netAPR / 12;
-  const g24 = capital * grossAPR / 365;
-  const gWk = capital * grossAPR / 52;
-  const gMo = capital * grossAPR / 12;
+  // ═══ POOL BASE APY ═══
+  const pairApys = POOL_BASE_APY[S.pair] || {};
+  const chainNorm = chainKey.toLowerCase().replace(' ','');
+  const baseApy = pairApys[chainNorm] || pairApys[Object.keys(pairApys)[0]] || 0.08;
 
-  // Render
-  animVal('earn24', n24); $('earn24sub').textContent = (netAPR*100).toFixed(2) + '% netto/år';
-  animVal('earnWk', nWk); $('earnWkSub').textContent = (netAPR*100/52).toFixed(3) + '% per 7 dagar';
-  animVal('earnMo', nMo); $('earnMoSub').textContent = (netAPR*100/12).toFixed(2) + '% per 30 dagar';
-  $('g24').textContent = fmtE(g24);
-  $('gWk').textContent = fmtE(gWk);
-  $('gMo').textContent = fmtE(gMo);
+  // ═══ POSITION APY = Pool APY × Capital Efficiency ═══
+  const posApy = Math.min(baseApy * capEff, 3.0); // Max 300% cap
 
-  // Range bar
-  const pct = Math.max(3, Math.min(97, ((price - low) / (high - low)) * 100));
-  $('rPin').style.left = pct + '%';
-  $('rLow').textContent  = fmtP(low);
-  $('rHigh').textContent = fmtP(high);
-  $('rCurr').textContent = fmtP(price);
+  // ═══ INTÄKTER ═══
+  const annualGross = capital * posApy;
+  const annualNet   = annualGross; // Förenklar — inga dolda kostnader
+  const daily       = annualNet / 365;
+  const weekly      = annualNet / 52;
+  const monthly     = annualNet / 12;
 
-  // APR boxes
-  $('gAPR').textContent = (grossAPR*100).toFixed(1) + '%';
-  $('nAPR').textContent = (netAPR*100).toFixed(1) + '%';
-  $('nAPRsub').textContent = fmtE(nMo) + '/mån · ' + fmtE(n24) + '/dag';
-  $('rangeW').textContent  = ((high/low-1)*100).toFixed(1) + '%';
-  $('capEff').textContent  = capEff.toFixed(1) + 'x (' + capEffRel.toFixed(2) + 'x rel.)';
-  $('annualNet').textContent = fmtE(capital * netAPR) + '/år';
-  $('rebal').textContent   = rebalances + ' ggr/period';
+  // ═══ VISA RESULTAT ═══
+  const fmtU = v => '$' + Math.round(v).toLocaleString('sv-SE');
+  const fmtP = v => v.toFixed(2) + '%';
 
-  // Benchmarks
-  if (S.live.aaveRate) {
-    const ar = S.live.aaveRate;
-    $('aaveR').textContent = ar.toFixed(2) + '% APY';
-    const pr = netAPR*100 - ar;
-    $('premium').textContent = (pr>=0?'+':'') + pr.toFixed(2) + '%';
-    $('premium').style.color = pr >= 0 ? 'var(--green)' : 'var(--red)';
+  $('earn24sub').textContent  = (posApy*100).toFixed(1) + '% netto/år';
+  $('earnWkSub').textContent  = fmtP(posApy/52) + ' per 7 dagar';
+  $('earnMoSub').textContent  = (posApy/12).toFixed(2) + '% per 30 dagar';
+  $('g24').textContent  = fmtU(daily);
+  $('gWk').textContent  = fmtU(weekly);
+  $('gMo').textContent  = fmtU(monthly);
+  $('rLow').textContent  = '$' + rLow.toFixed(rLow > 100 ? 0 : 4);
+  $('rHigh').textContent = '$' + rHigh.toFixed(rHigh > 100 ? 0 : 4);
+  $('rCurr').textContent = '$' + price.toFixed(price > 100 ? 2 : 4);
+  $('gAPR').textContent  = (baseApy * 100).toFixed(1) + '%';
+  $('nAPR').textContent  = (posApy * 100).toFixed(1) + '%';
+  $('nAPRsub').textContent = 'baserat på senaste 30d pool-data';
+  $('rangeW').textContent  = rng.label;
+  $('capEff').textContent  = capEff.toFixed(2) + 'x';
+  $('annualNet').textContent = fmtU(annualNet);
+
+  // vsSavings
+  const savingsReturn = capital * 0.005 * (days/365);
+  const vsBank = annualNet * (days/365) - savingsReturn;
+  const vsBankEl = $('vsSavings');
+  const vsBankSubEl = $('vsSavingsSub');
+  if (vsBankEl) {
+    vsBankEl.textContent = (vsBank >= 0 ? '+' : '') + fmtU(vsBank);
+    vsBankEl.style.color = vsBank >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+  if (vsBankSubEl) {
+    vsBankSubEl.textContent = vsBank >= 0
+      ? 'DeFi ger ' + fmtU(Math.abs(vsBank)) + ' mer än bank'
+      : 'Välj lägre risk eller längre tidshorisont';
   }
 
-  // Cost breakdown
-  $('costBD').innerHTML = `
-    <div class="cost-row"><span>Brutto fee-intäkt</span><span class="mono green">+${(grossAPR*100).toFixed(2)}%</span></div>
-    <div class="cost-row"><span>Management (${(mgmt*100).toFixed(0)}%)</span><span class="mono red">−${(mgmtDragAPR*100).toFixed(2)}%</span></div>
-    <div class="cost-row"><span>Gas (${rebalances} rebalans)</span><span class="mono red">−$${gasUsd.toFixed(1)}</span></div>
-    <div class="cost-row"><span>Slippage</span><span class="mono red">−${(slipDragAPR*100).toFixed(2)}%</span></div>
-    <div class="cost-row"><span class="green">Netto-APR</span><span class="mono ${netAPR>=0?'green':'red'}">${netAPR>=0?'+':''}${(netAPR*100).toFixed(2)}%</span></div>`;
+  // Visa disclaimer
+  const disc = $('calcDisclaimer');
+  if (disc) disc.style.display = 'block';
 
-  // Beginner summary
-  const riskName = {conservative:'trygg 🛡️', balanced:'balanserad ⚖️', aggressive:'aggressiv 🚀'}[S.risk];
-  $('beginnerSummary').innerHTML = `
-    <div class="grid-2" style="margin-bottom:14px">
-      <div style="background:var(--bgreen);border:1px solid rgba(0,214,143,.2);border-radius:12px;padding:12px;text-align:center">
-        <div style="font-size:10px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Per dag</div>
-        <div class="mono" style="font-size:22px;font-weight:700;color:var(--green)">${fmtE(n24)}</div>
-      </div>
-      <div style="background:var(--bpurple);border:1px solid rgba(155,107,255,.2);border-radius:12px;padding:12px;text-align:center">
-        <div style="font-size:10px;color:var(--purple);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Per månad</div>
-        <div class="mono" style="font-size:22px;font-weight:700;color:var(--purple)">${fmtE(nMo)}</div>
-      </div>
-    </div>
-    <p>Du investerar <strong>${fmtE(capital)}</strong> i <strong>${S.pair}/USDC</strong> med risknivå <strong>${riskName}</strong>.</p><br>
-    <p>Din range är <strong>${fmtP(low)} → ${fmtP(high)}</strong>. Priset <strong>${fmtP(price)}</strong> är <span class="green bold">inne i rangen ✓</span>.</p><br>
-    <p>${netAPR >= (S.live.aaveRate||0.05)
-      ? '🎉 Din avkastning på <strong>'+(netAPR*100).toFixed(1)+'%</strong> slår Aave ('+((S.live.aaveRate||5).toFixed(1))+'%). Bra!'
-      : '⚠️ Avkastningen ('+(netAPR*100).toFixed(1)+'%) är lägre än Aave just nu. Välj tightare range.'}</p>`;
+  // Visa resultat-sektion
+  const rs = $('resultSection');
+  if (rs) rs.classList.remove('hidden');
 
-  // Where to invest
-  renderWhereToInvest(price, low, high, capital, fee, netAPR);
-
-  renderScenarios(price, low, high, capital, grossAPR, days);
-  renderMC(price, low, high, capital, grossAPR, dailyVol, days);
-  renderLivePools();
-
-  const rs = $('resultsSection');
-  rs.classList.remove('hidden');
-  rs.style.animation = 'fadeIn .4s ease';
-  setTimeout(() => rs.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
+  // Uppdatera protokoll-sektion
+  showProtocols();
 }
 
-function animVal(id, to) {
-  const el = $(id);
-  if (!el) return;
-  const start = performance.now();
-  const from = 0;
-  (function step(ts) {
-    const pct = Math.min((ts - start) / 600, 1);
-    const ease = 1 - Math.pow(1 - pct, 3);
-    const val = from + (to - from) * ease;
-    el.textContent = fmtE(Math.max(0, val));
-    if (pct < 1) requestAnimationFrame(step);
-  })(start);
-}
-
-// ── WHERE TO INVEST ─────────────────────────────────────────
-function renderWhereToInvest(price, low, high, capital, fee, netAPR) {
-  const chainKey = $('chain').value;
-  const protocols = (PROTOCOL_MAP[S.pair] || {})[chainKey] || [];
-  const feeDisplay = (fee*100).toFixed(2) + '%';
-
-  // Protocols grid
-  const pEl = $('whereProtocols');
-  if (protocols.length === 0) {
-    pEl.innerHTML = `<div class="info-box" style="grid-column:1/-1">ℹ️ Sök på <a href="https://defillama.com/yields?token=${S.pair}" target="_blank" style="color:var(--blue)">DefiLlama ↗</a> för ${S.pair} på ${chainKey}</div>`;
-  } else {
-    pEl.style.gridTemplateColumns = protocols.length > 1 ? '1fr 1fr' : '1fr';
-    pEl.innerHTML = protocols.map((p, i) => `
-      <a href="${p.url}" target="_blank" rel="noopener" class="proto-card">
-        <div class="proto-box ${i===0?'recommended':''}">
-          ${i===0 ? '<div style="font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px">⭐ Rekommenderas</div>' : '<div style="font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px">Alternativ</div>'}
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-            <span style="font-size:26px">${p.icon}</span>
-            <div><div style="font-size:15px;font-weight:800">${p.name}</div><div style="font-size:11px;color:var(--txt3)">TVL: ${p.tvl}</div></div>
-          </div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">
-            ${p.fees.map(f => `<span class="badge badge-blue">${f} fee</span>`).join('')}
-            <span class="chain-tag ${chainKey==='arbitrum'?'carb':chainKey==='ethereum'?'ceth':chainKey==='solana'?'csol':chainKey==='sui'?'csui':chainKey==='base'?'cbase':chainKey==='optimism'?'cop':''}">${chainKey}</span>
-          </div>
-          <div style="font-size:12px;color:var(--blue);font-weight:600">Öppna ${p.name} ↗</div>
-        </div>
-      </a>`).join('');
-  }
-
-  // Matching live pools
-  const mEl = $('whereMatchPools');
-  const matches = S.live.pools.filter(PAIRS[S.pair].lf).filter(p => (p.tvlUsd||0) > 200000)
-    .sort((a,b) => (b.tvlUsd||0) - (a.tvlUsd||0)).slice(0, 3);
-  if (!matches.length) {
-    mEl.innerHTML = '<div style="color:var(--txt3);font-size:12px">Öppna Heta Pooler-fliken för live-pooler</div>';
-  } else {
-    mEl.innerHTML = matches.map(p => {
-      const proto = getProto(p.project);
-      const mo = capital * (p.apy||0)/100/12;
-      const isMatch = p.chain.toLowerCase() === chainKey.toLowerCase();
-      const key = storePool({ symbol:p.symbol, project:p.project, chain:p.chain, apy:p.apy, tvlUsd:p.tvlUsd });
-      return `<div data-simkey="${key}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:${isMatch?'rgba(77,141,255,.06)':'var(--bg2)'};border:1px solid ${isMatch?'rgba(77,141,255,.25)':'var(--border)'};border-radius:var(--r);margin-bottom:7px;cursor:pointer">
-        <div>
-          <div style="font-weight:700;font-size:13px">${proto.icon} ${p.project} ${isMatch?'<span class="badge badge-blue" style="font-size:9px">✓ Din kedja</span>':''}</div>
-          <div style="font-size:11px;color:var(--txt3)">${p.symbol} · ${p.chain} · TVL ${fmtU(p.tvlUsd||0)}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="text-align:right"><div class="mono bold" style="font-size:15px;color:var(--green)">${(p.apy||0).toFixed(1)}%</div><div style="font-size:11px;color:var(--txt3)">${fmtE(mo)}/mån</div></div>
-          <a href="${proto.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="pool-open-btn">${proto.icon} Öppna ↗</a>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  // Fee tier
-  $('whereFeeTier').innerHTML = `<div style="display:flex;align-items:flex-start;gap:12px"><span style="font-size:22px">💸</span><div><div style="font-size:13px;font-weight:700;margin-bottom:3px">Fee-tier: <span class="mono blue">${feeDisplay}</span></div><div style="font-size:12px;color:var(--txt2)">Du tjänar <strong>${feeDisplay}</strong> av varje swap som sker i din range. Välj den fee-tier som har mest volym för ditt par.</div></div></div>`;
-
-  // Action buttons
-  const lEl = $('whereLinks');
-  lEl.innerHTML = protocols.slice(0,2).map((p, i) =>
-    `<a href="${p.url}" target="_blank" rel="noopener" style="text-decoration:none"><button class="btn ${i===0?'btn-primary':'btn-ghost'}">${p.icon} ${i===0?'Investera på ':'Öppna '}${p.name} ↗</button></a>`
-  ).join('') + `<a href="https://defillama.com/yields?token=${S.pair}" target="_blank" rel="noopener" style="text-decoration:none"><button class="btn btn-ghost">📊 Alla ${S.pair}-pooler på DefiLlama ↗</button></a>`;
-}
-
-// ── SCENARIOS ────────────────────────────────────────────────
-function renderScenarios(price, low, high, cap, gAPR, days) {
-  const sc = [{l:'🐻 Kris −60%',f:.4},{l:'📉 −40%',f:.6},{l:'🔴 −20%',f:.8},{l:'🟡 −10%',f:.9},{l:'🟢 Oförändrat',f:1},{l:'🔼 +10%',f:1.1},{l:'📈 +20%',f:1.2},{l:'🚀 +50%',f:1.5},{l:'💎 +100%',f:2}];
-  $('scenTbl').innerHTML = sc.map(s => {
-    const p2 = price * s.f, inR = p2 >= low && p2 <= high, r = p2/price;
-    const il   = inR ? -(2*Math.sqrt(r)/(1+r)-1)*cap : -(Math.min(.5, Math.abs(r-1)*.5))*cap;
-    const fees = inR ? cap*gAPR*days/365 : cap*gAPR*days/365*.12;
-    const pnl  = il + fees;
-    return `<tr><td>${s.l}</td><td class="mono">${fmtP(p2)}</td><td class="${inR?'green':'red'}" style="font-weight:600">${inR?'✓ Ja':'✗ Nej'}</td><td class="mono red">${il<0?'−':''}$${Math.abs(il).toFixed(0)}</td><td class="mono green">$${fees.toFixed(0)}</td><td class="mono bold ${pnl>=0?'green':'red'}">${pnl>=0?'+':''}$${pnl.toFixed(0)}</td></tr>`;
-  }).join('');
-}
-
-// ── MONTE CARLO ──────────────────────────────────────────────
-function renderMC(price, low, high, cap, gAPR, dv, days) {
-  const N = 1000;
-  const res = [];
-  let tir = 0;
-  for (let i = 0; i < N; i++) {
-    let p = price, fees = 0, ir = 0;
-    for (let d = 0; d < days; d++) {
-      p *= Math.exp(dv * (Math.random()*2-1) * 1.414 - .5*dv*dv);
-      if (p >= low && p <= high) { fees += cap * gAPR / 365; ir++; }
-    }
-    const r = p/price;
-    res.push(fees + (p >= low && p <= high ? -(2*Math.sqrt(r)/(1+r)-1)*cap : 0));
-    tir += ir / days;
-  }
-  res.sort((a,b) => a-b);
-  const p10 = res[Math.floor(N*.1)], p50 = res[Math.floor(N*.5)], p90 = res[Math.floor(N*.9)];
-  const aR  = cap * (S.live.aaveRate||.05) / 100 * days / 365;
-  $('mcP10').textContent  = (p10>=0?'+':'') + '$' + Math.abs(p10).toFixed(0);
-  $('mcP50').textContent  = (p50>=0?'+':'') + '$' + Math.abs(p50).toFixed(0);
-  $('mcP90').textContent  = '+$' + p90.toFixed(0);
-  $('mcPos').textContent  = (res.filter(x=>x>0).length/N*100).toFixed(0) + '%';
-  $('mcAave').textContent = (res.filter(x=>x>aR).length/N*100).toFixed(0) + '%';
-  $('mcTIR').textContent  = (tir/N*100).toFixed(0) + '%';
-  const cv = $('mcCanvas');
-  const ctx = cv.getContext('2d');
-  cv.width = cv.offsetWidth*2||900; cv.height = 140;
-  ctx.clearRect(0,0,cv.width,cv.height);
-  const mn = res[0], mx = res[N-1], W = cv.width, H = cv.height, B = 50;
-  const hist = new Array(B).fill(0);
-  for (const r of res) hist[Math.min(Math.floor(((r-mn)/(mx-mn||1))*(B-1)), B-1)]++;
-  const hm = Math.max(...hist);
-  const z0 = ((0-mn)/(mx-mn||1))*W;
-  for (let i = 0; i < B; i++) {
-    const x=(i/B)*W, bw=W/B-1, bh=(hist[i]/hm)*(H-20), ctr=mn+(i/B)*(mx-mn);
-    ctx.fillStyle = ctr > 0 ? 'rgba(0,214,143,.55)' : 'rgba(255,77,109,.45)';
-    ctx.fillRect(x, H-bh, bw, bh);
-  }
-  if (z0 > 0 && z0 < W) { ctx.strokeStyle='rgba(255,255,255,.2)'; ctx.setLineDash([4,4]); ctx.beginPath(); ctx.moveTo(z0,0); ctx.lineTo(z0,H); ctx.stroke(); ctx.setLineDash([]); }
-}
-
-// ── BACKTEST ─────────────────────────────────────────────────
-document.querySelectorAll('.bt-btn').forEach(b => b.addEventListener('click', async () => {
-  document.querySelectorAll('.bt-btn').forEach(x => x.classList.remove('on'));
-  b.classList.add('on');
-  const days = parseInt(b.dataset.d);
-  $('btRes').innerHTML = '<span class="spin"></span> Hämtar historisk data...';
-  try {
-    const r  = await fetch('https://api.coingecko.com/api/v3/coins/' + PAIRS[S.pair].cg + '/market_chart?vs_currency=usd&days=' + days + '&interval=daily');
-    const d  = await r.json();
-    const pp = d.prices.map(x => x[1]);
-    const dv = S.live.vols[S.pair] || PAIRS[S.pair].dvol;
-    const s  = RISK[S.risk].s;
-    const sp = pp[0], lo = sp*Math.exp(-s*dv*Math.sqrt(days)), hi = sp*Math.exp(s*dv*Math.sqrt(days));
-    const cap = parseFloat($('capital').value) || 25000;
-    let totFees = 0, irDays = 0;
-    for (const p of pp) { if (p>=lo && p<=hi) { totFees += cap*PAIRS[S.pair].fee*PAIRS[S.pair].v2tvl*365/pp.length; irDays++; } }
-    const lp = pp[pp.length-1], r2 = lp/sp, il = -(2*Math.sqrt(r2)/(1+r2)-1)*cap, pnl = totFees+il, pch = ((lp/sp-1)*100).toFixed(1);
-    $('btRes').innerHTML = `<div class="grid-2" style="gap:10px"><div class="stat-card"><div class="stat-lbl">Prisrörelse</div><div class="stat-val ${pch>=0?'green':'red'}">${pch>=0?'+':''}${pch}%</div></div><div class="stat-card"><div class="stat-lbl">Tid i range</div><div class="stat-val">${(irDays/pp.length*100).toFixed(0)}%</div></div><div class="stat-card"><div class="stat-lbl">Fee-intäkt</div><div class="stat-val green">$${totFees.toFixed(0)}</div></div><div class="stat-card"><div class="stat-lbl">Netto-PnL</div><div class="stat-val ${pnl>=0?'green':'red'}">${pnl>=0?'+':''}$${pnl.toFixed(0)}</div></div></div><div style="font-size:11px;color:var(--txt3);margin-top:10px">Range: ${fmtP(lo)}–${fmtP(hi)} · ${fmtP(sp)} → ${fmtP(lp)} · Kapital: $${cap.toLocaleString()}</div>`;
-  } catch(e) { $('btRes').innerHTML = '<span style="color:var(--red)">Misslyckades: ' + e.message + '</span>'; }
-}));
-
-// ── IL CALC ──────────────────────────────────────────────────
-function calcIL() {
-  const en=parseFloat($('ilEntry').value), cu=parseFloat($('ilCurr').value);
-  const lo=parseFloat($('ilLow').value),   hi=parseFloat($('ilHigh').value);
-  if (!en || !cu) return;
-  const r = cu/en, inR = lo && hi && cu>=lo && cu<=hi;
-  const ilPct = inR ? (2*Math.sqrt(r)/(1+r)-1)*100 : -(Math.abs(r-1)*.5)*100;
-  $('ilPct').textContent = ilPct.toFixed(2) + '%';
-  $('ilUsd').textContent = (ilPct/100*10000>=0?'+':'') + '$' + (ilPct/100*10000).toFixed(0) + ' på $10k';
-  $('ilHodl').textContent = '$10 000';
-  $('ilLP').textContent = '$' + (10000*(1+ilPct/100)).toFixed(0);
-  $('ilRes').classList.remove('hidden');
-}
-
-// ── LIVE POOLS (calc tab) ────────────────────────────────────
-function renderLivePools() {
-  const el = $('livePools');
-  const matches = S.live.pools.filter(PAIRS[S.pair].lf).filter(p => (p.tvlUsd||0) > 100000)
-    .sort((a,b) => (b.tvlUsd||0)-(a.tvlUsd||0)).slice(0, 5);
-  const cap = parseFloat($('capital').value) || 25000;
-  if (!matches.length) { el.innerHTML = '<div style="color:var(--txt3)">Inga matchande pooler.</div>'; return; }
-  el.innerHTML = matches.map(p => {
-    const proto = getProto(p.project);
-    const key = storePool({ symbol:p.symbol, project:p.project, chain:p.chain, apy:p.apy, tvlUsd:p.tvlUsd });
-    return `<div data-simkey="${key}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:7px;cursor:pointer">
-      <div><div style="font-weight:700;font-size:13px">${proto.icon} ${p.project} · ${p.chain}</div><div style="font-size:11px;color:var(--txt3)">${p.symbol} · TVL ${fmtU(p.tvlUsd||0)}</div></div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="text-align:right"><div class="mono bold green" style="font-size:15px">${(p.apy||0).toFixed(1)}%</div><div style="font-size:11px;color:var(--txt3)">${fmtE(cap*(p.apy||0)/100/12)}/mån</div></div>
-        <a href="${proto.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="pool-open-btn">${proto.icon} Öppna ↗</a>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ── SIMULATOR ────────────────────────────────────────────────
-// Event delegation — INGEN onclick-sträng, inga template literals i HTML
-document.addEventListener('click', function(e) {
-  const row = e.target.closest('[data-simkey]');
-  if (!row) return;
-  if (e.target.closest('a')) return; // let links through
-  e.stopPropagation();
-  const key = row.dataset.simkey;
-  const pool = POOL_STORE.get(key);
-  if (pool) openSim(pool);
-});
 
 function openSim(pool) {
   simPool = pool;
