@@ -2294,7 +2294,7 @@ function calculate() {
   if (rs) rs.classList.remove('hidden');
 
   // Uppdatera protokoll-sektion
-  showProtocols();
+  if (typeof renderProtocolCards === 'function') renderProtocolCards();
 }
 
 
