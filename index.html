@@ -2616,6 +2616,14 @@ document.addEventListener('click', function(e) {
   btn.textContent = isFav ? '☆' : '⭐';
   btn.classList.toggle('on', !isFav);
 });
+
+// Simulera-knapp pÃ¥ hot cards (delegering)
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.hc-sim-btn');
+  if (!btn) return;
+  const pool = POOL_STORE.get(btn.dataset.simkey);
+  if (pool) openSim(pool);
+});
 // Chain filter
 document.querySelectorAll('.cf-btn').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.cf-btn').forEach(x => x.classList.remove('on'));
