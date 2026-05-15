@@ -2260,6 +2260,12 @@ function calculate() {
   $('g24').textContent  = fmtU(daily);
   $('gWk').textContent  = fmtU(weekly);
   $('gMo').textContent  = fmtU(monthly);
+  $('earn24').textContent = fmtU(daily);
+  $('earnWk').textContent = fmtU(weekly);
+  $('earnMo').textContent = fmtU(monthly);
+  $('earn24').textContent = fmtU(daily);
+  $('earnWk').textContent = fmtU(weekly);
+  $('earnMo').textContent = fmtU(monthly);
   $('rLow').textContent  = '$' + rLow.toFixed(rLow > 100 ? 0 : 4);
   $('rHigh').textContent = '$' + rHigh.toFixed(rHigh > 100 ? 0 : 4);
   $('rCurr').textContent = '$' + price.toFixed(price > 100 ? 2 : 4);
@@ -2290,7 +2296,7 @@ function calculate() {
   if (disc) disc.style.display = 'block';
 
   // Visa resultat-sektion
-  const rs = $('resultSection');
+  const rs = $('resultsSection');
   if (rs) rs.classList.remove('hidden');
 
   // Uppdatera protokoll-sektion
