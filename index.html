@@ -1049,7 +1049,7 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
   </div>
   <div class="card">
     <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:7px"><span class="dot-live"></span> Top 10 Kryptovalutor <span style="flex:1;height:1px;background:var(--border);display:block"></span></div>
-    <div id="topCoins"><div style="text-align:center;color:var(--txt3);padding:20px"><span class="spin"></span> Hämtar...</div></div>
+    <div id="topCoins"><div style="text-align:right;padding:4px 8px"><button onclick="toggleCoinFavFilter()" id="coinFavFilterBtn" style="background:var(--card);border:1px solid var(--border);color:var(--txt);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12px">☆ Visa favoriter</button></div><div style="text-align:center;color:var(--txt3);padding:20px"><span class="spin"></span> Hämtar...</div></div>
   </div>
 </div>
 
@@ -1939,6 +1939,7 @@ let S = {
 let wallet = { on:false, addr:null, chain:null };
 let poolsData = [], portfolio = [], savedRanges = [];
 let poolFavs = new Set(JSON.parse(localStorage.getItem('pfavs') || '[]'));
+let coinFavs = new Set(JSON.parse(localStorage.getItem('cfavs') || '[]'));
 let pChain = 'all', pSort = 'apy', pFavOnly = false, pSearch = '';
 let alertTimer = null, simPool = null, installPrompt = null;
 let simRisk = 'balanced';
@@ -2790,6 +2791,7 @@ async function fetchTopCoins() {
         <div class="coin-price mono">${c.current_price >= 1000 ? '$'+Math.round(c.current_price).toLocaleString() : '$'+c.current_price.toFixed(c.current_price<1?4:2)}</div>
         <div class="coin-ch ${ch>=0?'green':'red'}">${ch>=0?'+':''}${ch.toFixed(2)}%</div>
         <div class="coin-mc">${fmtU(c.market_cap||0)}</div>
+      <button class="coin-fav-btn" onclick="toggleCoinFav('${c.symbol}',this)" title="Favorit">${coinFavs.has(c.symbol)?'★':'☆'}</button>
       </div>`;
     }).join('');
   } catch(e) {}
@@ -2893,6 +2895,9 @@ function renderPortfolio() {
 function savePortfolio() {
   try { localStorage.setItem('defiProPortfolio', JSON.stringify(portfolio)); } catch(e) {}
 }
+function toggleCoinFav(sym,btn){if(coinFavs.has(sym)){coinFavs.delete(sym);btn.textContent='☆';}else{coinFavs.add(sym);btn.textContent='★';}try{localStorage.setItem('cfavs',JSON.stringify([...coinFavs]));}catch(e){}}
+var _coinFavFilterOn=false;
+function toggleCoinFavFilter(){_coinFavFilterOn=!_coinFavFilterOn;var btn=document.getElementById('coinFavFilterBtn');if(btn)btn.textContent=_coinFavFilterOn?'★ Alla coins':'☆ Visa favoriter';var rows=document.querySelectorAll('.coin-row');rows.forEach(function(r){var b=r.querySelector('.coin-fav-btn');if(!b)return;var isFav=b.textContent==='★';r.style.display=(_coinFavFilterOn&&!isFav)?'none':'';});}
 function loadPortfolio() {
   try {
     var saved = localStorage.getItem('defiProPortfolio');
@@ -3857,6 +3862,7 @@ window.loadTracker=async function(){if(!wallet||!wallet.on||!wallet.addr||wallet
 document.querySelectorAll('.nav-btn').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.nav-btn').forEach(function(x){x.classList.remove('active');});document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('active');});b.classList.add('active');const p=document.getElementById('panel-'+b.dataset.p);if(p)p.classList.add('active');if(b.dataset.p==='tracker'&&wallet&&wallet.on&&wallet.addr)window.loadTracker();if(b.dataset.p==='pools'&&poolsData.length===0)loadPools();if(b.dataset.p==='market')loadMarket();if(b.dataset.p==='mål')calcGoal();});});
 (function(){const _cw=window.connectWallet;window.connectWallet=async function(t){if(t!=='rabby')return _cw.call(this,t);const st=document.getElementById('walletStatus');if(location.protocol==='file:'){st.innerHTML='<div style="color:var(--amber);font-size:12px;text-align:left;line-height:1.6"><strong>⚠️ Plånböcker kräver HTTPS</strong><br>Kör: <code style="background:rgba(0,0,0,.3);padding:1px 6px;border-radius:3px">python3 -m http.server 8080</code></div>';return;}const prov=window.rabby||(window.ethereum&&window.ethereum.isRabby?window.ethereum:null)||window.ethereum;if(!prov){st.innerHTML='<span style="color:var(--amber)">❌ Ingen EVM-plånbok. <a href="https://rabby.io/" target="_blank" style="color:var(--blue)">Installera Rabby ↗</a></span>';return;}st.textContent='⏳ '+(window.rabby||(window.ethereum&&window.ethereum.isRabby)?'Ansluter Rabby...':'Ansluter EVM...');try{const accounts=await prov.request({method:'eth_requestAccounts'});const addr=accounts[0];const chainHex=await prov.request({method:'eth_chainId'});const chain=parseInt(chainHex,16);doConnect(addr,chain);closeWallet();if(prov.on){prov.on('accountsChanged',function(a){if(!a.length&&window.doDisconnect)window.doDisconnect();else if(a.length)doConnect(a[0],chain);});prov.on('chainChanged',function(nc){if(wallet&&wallet.addr)doConnect(wallet.addr,parseInt(nc,16));});}}catch(e){st.textContent='❌ '+(e.code===4001?'Avvisad.':e.message);}};})();
 loadPortfolio();
+setTimeout(function(){ if(typeof loadPools==='function') loadPools(); }, 1500);
 if(window._tRefInt)clearInterval(window._tRefInt);window._tRefInt=setInterval(function(){const tp=document.getElementById('panel-tracker');if(tp&&tp.classList.contains('active')&&wallet&&wallet.on)window.loadTracker();},60000);
 /* ══ END WALLET TRACKER ══ */</script>
 
