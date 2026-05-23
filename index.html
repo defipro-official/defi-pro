@@ -2867,10 +2867,11 @@ function addPos() {
   const n=($('pName').value||'').trim(), en=parseFloat($('pEntry').value), lo=parseFloat($('pLow').value), hi=parseFloat($('pHigh').value), cap=parseFloat($('pCap').value);
   if (!n||!en||!lo||!hi||!cap) return;
   portfolio.push({n,en,lo,hi,cap,id:Date.now()});
+  savePortfolio();
   renderPortfolio();
   ['pName','pEntry','pLow','pHigh','pCap'].forEach(id => $(id).value = '');
 }
-function removePos(id) { portfolio = portfolio.filter(p => p.id !== id); renderPortfolio(); }
+function removePos(id) { portfolio = portfolio.filter(p => p.id !== id); savePortfolio(); renderPortfolio(); }
 function renderPortfolio() {
   const el = $('portList');
   if (!portfolio.length) { el.innerHTML = '<div style="color:var(--txt3);font-size:13px">Inga positioner.</div>'; $('portSum').classList.add('hidden'); return; }
@@ -2889,6 +2890,19 @@ function renderPortfolio() {
   $('ptOut').textContent = outR + '/' + portfolio.length;
   $('portSum').classList.remove('hidden');
 }
+function savePortfolio() {
+  try { localStorage.setItem('defiProPortfolio', JSON.stringify(portfolio)); } catch(e) {}
+}
+function loadPortfolio() {
+  try {
+    var saved = localStorage.getItem('defiProPortfolio');
+    if (saved) {
+      portfolio = JSON.parse(saved);
+      renderPortfolio();
+    }
+  } catch(e) {}
+}
+
 async function loadOnchain() {
   const el = document.getElementById('onchainList');
   if (!el || !wallet.addr) return;
@@ -3842,6 +3856,7 @@ window.loadTracker=async function(){if(!wallet||!wallet.on||!wallet.addr||wallet
 (function(){const _dc=window.doConnect;window.doConnect=function(addr,chain){_dc.call(this,addr,chain);setTimeout(function(){const tp=document.getElementById('panel-tracker');if(tp&&tp.classList.contains('active')&&wallet&&wallet.on)window.loadTracker();if(wallet&&wallet.on&&wallet.addr.indexOf('DEMO')===-1&&window.trackerShow)window.trackerShow('trackerNoWallet',false);},300);};const _dd=window.doDisconnect;window.doDisconnect=function(){if(_dd)_dd.call(this);['trackerConnected','trackerKpis','trackerTokenSection','trackerAaveSection'].forEach(function(id){if(window.trackerShow)window.trackerShow(id,false);});if(window.trackerShow)window.trackerShow('trackerNoWallet',true);const lt=document.getElementById('trackerLiveTag');if(lt)lt.style.display='none';};})();
 document.querySelectorAll('.nav-btn').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.nav-btn').forEach(function(x){x.classList.remove('active');});document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('active');});b.classList.add('active');const p=document.getElementById('panel-'+b.dataset.p);if(p)p.classList.add('active');if(b.dataset.p==='tracker'&&wallet&&wallet.on&&wallet.addr)window.loadTracker();if(b.dataset.p==='pools'&&poolsData.length===0)loadPools();if(b.dataset.p==='market')loadMarket();if(b.dataset.p==='mål')calcGoal();});});
 (function(){const _cw=window.connectWallet;window.connectWallet=async function(t){if(t!=='rabby')return _cw.call(this,t);const st=document.getElementById('walletStatus');if(location.protocol==='file:'){st.innerHTML='<div style="color:var(--amber);font-size:12px;text-align:left;line-height:1.6"><strong>⚠️ Plånböcker kräver HTTPS</strong><br>Kör: <code style="background:rgba(0,0,0,.3);padding:1px 6px;border-radius:3px">python3 -m http.server 8080</code></div>';return;}const prov=window.rabby||(window.ethereum&&window.ethereum.isRabby?window.ethereum:null)||window.ethereum;if(!prov){st.innerHTML='<span style="color:var(--amber)">❌ Ingen EVM-plånbok. <a href="https://rabby.io/" target="_blank" style="color:var(--blue)">Installera Rabby ↗</a></span>';return;}st.textContent='⏳ '+(window.rabby||(window.ethereum&&window.ethereum.isRabby)?'Ansluter Rabby...':'Ansluter EVM...');try{const accounts=await prov.request({method:'eth_requestAccounts'});const addr=accounts[0];const chainHex=await prov.request({method:'eth_chainId'});const chain=parseInt(chainHex,16);doConnect(addr,chain);closeWallet();if(prov.on){prov.on('accountsChanged',function(a){if(!a.length&&window.doDisconnect)window.doDisconnect();else if(a.length)doConnect(a[0],chain);});prov.on('chainChanged',function(nc){if(wallet&&wallet.addr)doConnect(wallet.addr,parseInt(nc,16));});}}catch(e){st.textContent='❌ '+(e.code===4001?'Avvisad.':e.message);}};})();
+loadPortfolio();
 if(window._tRefInt)clearInterval(window._tRefInt);window._tRefInt=setInterval(function(){const tp=document.getElementById('panel-tracker');if(tp&&tp.classList.contains('active')&&wallet&&wallet.on)window.loadTracker();},60000);
 /* ══ END WALLET TRACKER ══ */</script>
 
