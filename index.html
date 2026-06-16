@@ -792,7 +792,7 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
       <button class="mode-btn on" id="btnBeg" onclick="setMode('beginner')">🌱 Enkel</button>
       <button class="mode-btn" id="btnExp" onclick="setMode('expert')">⚡ Expert</button>
     </div>
-    <button onclick="document.querySelector('[data-p=guide]').click()" class="btn btn-ghost btn-sm" title="Öppna guide">📖 Guide</button>
+    <button onclick="document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('[data-p]').forEach(b=>b.classList.remove('active'));document.querySelector('#panel-guide').classList.add('active');window.scrollTo(0,0)" class="btn btn-ghost btn-sm" title="Öppna guide">📖 Guide</button>
   </div>
 </div>
 
@@ -804,7 +804,7 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
     <div class="card">
-      <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:7px">💱 Välj kryptoval <span style="flex:1;height:1px;background:var(--border);display:block"></span><button onclick="document.querySelector('[data-p=guide]').click()" style="background:none;border:none;font-size:11px;color:var(--blue);cursor:pointer;white-space:nowrap;font-family:var(--sans)">📖 Ny här?</button></div>
+      <div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:7px">💱 Välj kryptoval <span style="flex:1;height:1px;background:var(--border);display:block"></span><button onclick="document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('[data-p]').forEach(b=>b.classList.remove('active'));document.querySelector('#panel-guide').classList.add('active');window.scrollTo(0,0)" style="background:none;border:none;font-size:11px;color:var(--blue);cursor:pointer;white-space:nowrap;font-family:var(--sans)">📖 Ny här?</button></div>
       <div class="pair-grid">
         <div class="pair-btn on" data-pair="WETH"><span class="pair-emoji">⟠</span><div class="pair-name">ETH/USDC</div><div class="pair-price" id="pp-WETH">—</div></div>
         <div class="pair-btn" data-pair="WBTC"><span class="pair-emoji">₿</span><div class="pair-name">BTC/USDC</div><div class="pair-price" id="pp-WBTC">—</div></div>
