@@ -1514,300 +1514,183 @@ footer{text-align:center;padding:28px 0 14px;font-size:10px;color:var(--txt3);fo
 
   <!-- HERO -->
   <div class="guide-hero">
-    <h1>📖 DeFi Pro — Komplett Guide</h1>
-    <p>Allt du behöver veta för att komma igång med DeFi-investering. Skriven för nybörjare, användbar för alla.</p>
+    <h1>🚀 DeFi Pro — Complete Guide</h1>
+    <p>Everything you need to know to get started with DeFi investing. Written for beginners, useful for everyone.</p>
   </div>
 
-  <!-- Snabbstart -->
+  <!-- Quick Start -->
   <div class="guide-section">
-    <h2>🚀 Kom igång på 3 steg</h2>
+    <h2>⚡ Get Started in 3 Steps</h2>
     <div class="guide-steps">
       <div class="guide-step">
         <div class="guide-step-num">1</div>
-        <h3>Välj ett kryptoval</h3>
-        <p>Gå till <strong>📐 Kalkylator</strong>. Välj ett par du tror på — ETH/USDC är bäst för nybörjare. Systemet hämtar live-priset automatiskt.</p>
+        <h3>Check Live Prices</h3>
+        <p>Go to <strong>🏠 Home</strong>. You’ll see live prices for ETH, BTC, SOL, and more — updated in real time from CoinGecko.</p>
       </div>
       <div class="guide-step">
         <div class="guide-step-num">2</div>
-        <h3>Beräkna din avkastning</h3>
-        <p>Ange hur mycket du vill investera, välj risknivå (börja med <strong>Balanserad</strong>) och tryck "Beräkna". Du ser direkt hur mycket du tjänar per dag, vecka och månad.</p>
+        <h3>Explore Hot Pools</h3>
+        <p>Tap <strong>🔥 Hot Pools</strong> to see the best DeFi yield opportunities right now. Filter by APY, TVL and risk score.</p>
       </div>
       <div class="guide-step">
         <div class="guide-step-num">3</div>
-        <h3>Investera på rätt plattform</h3>
-        <p>Klicka <strong>"Investera nu"</strong> i resultatsektionen — vi skickar dig direkt till rätt DEX med rätt pool förvald. Inget gissande.</p>
+        <h3>Track Your Portfolio</h3>
+        <p>Go to <strong>💼 Portfolio</strong> and add your positions. DeFi Pro tracks your value, profit/loss, and IL automatically.</p>
       </div>
     </div>
   </div>
 
-  <!-- Snabb-nav till funktioner -->
+  <!-- Navigation -->
   <div class="guide-section">
-    <h2>⚡ Gå direkt till en funktion</h2>
-    <div class="guide-cta-grid">
-      <div class="guide-cta-btn" onclick="document.querySelector('[data-p=calc]').click()">
-        <span class="icon">📐</span><div class="lbl">Kalkylator</div><div class="sub">Beräkna avkastning</div>
-      </div>
-      <div class="guide-cta-btn" onclick="document.querySelector('[data-p=pools]').click();loadPools()">
-        <span class="icon">🔥</span><div class="lbl">Heta Pooler</div><div class="sub">Se live-pooler</div>
-      </div>
-      <div class="guide-cta-btn" onclick="document.querySelector('[data-p=market]').click();loadMarket()">
-        <span class="icon">📊</span><div class="lbl">Marknad</div><div class="sub">Fear & Greed m.m.</div>
-      </div>
-      <div class="guide-cta-btn" onclick="document.querySelector('[data-p=mål]').click();calcGoal()">
-        <span class="icon">🎯</span><div class="lbl">Avkastningsmål</div><div class="sub">Sätt ditt mål</div>
-      </div>
+    <h2>🧭 Navigation Overview</h2>
+    <div class="guide-card">
+      <h3>🏠 Home</h3>
+      <p>The main dashboard. Shows live prices for major cryptocurrencies (ETH, BTC, SOL, AVAX, ARB and more). Prices update automatically every 30 seconds. Tap any coin to see more details.</p>
+    </div>
+    <div class="guide-card">
+      <h3>🔥 Hot Pools</h3>
+      <p>Discover the best DeFi liquidity pools right now. Data comes from DeFiLlama and updates live. Each pool shows APY (yield), TVL (total value locked), the protocol name, and a risk score. Use the filters to find pools that match your risk appetite.</p>
+    </div>
+    <div class="guide-card">
+      <h3>📊 Market</h3>
+      <p>A full market overview with prices, 24h change, market cap, and volume for hundreds of tokens. Click ☆ to save a coin as a favourite — then use "Show favourites" to filter your watchlist.</p>
+    </div>
+    <div class="guide-card">
+      <h3>💼 Portfolio</h3>
+      <p>Add your DeFi positions and track their value. Enter the token name, entry price, current price range and position size. DeFi Pro calculates your profit/loss and estimated impermanent loss (IL). Positions are saved automatically and survive app restarts.</p>
+    </div>
+    <div class="guide-card">
+      <h3>🔔 Alerts</h3>
+      <p>Set price alerts for any token. Choose a min and max price — you’ll get a notification when the price crosses your threshold. Connect Telegram to receive alerts even when the app is closed.</p>
+    </div>
+    <div class="guide-card">
+      <h3>🤖 AI Agent</h3>
+      <p>The built-in DeFi scanner and AI analyst. It scans DeFiLlama pools based on your filters and then uses Claude AI to analyse the results and give you a recommendation. Requires a Claude API key (from console.anthropic.com) to use the AI analysis step.</p>
+    </div>
+    <div class="guide-card">
+      <h3>💹 IL &amp; Hedge</h3>
+      <p>Advanced tools for managing impermanent loss. Calculate your IL for any price move, and explore hedging strategies to protect your position.</p>
+    </div>
+    <div class="guide-card">
+      <h3>📊 Tracker</h3>
+      <p>An on-chain tracker that lets you look up any Ethereum wallet address and see its token balances and DeFi positions in real time.</p>
     </div>
   </div>
 
-  <!-- Accordion FAQ per funktion -->
+  <!-- Hot Pools -->
   <div class="guide-section">
-    <h2>📚 Förklaringar per funktion</h2>
-
+    <h2>🔥 Understanding Hot Pools</h2>
     <div class="guide-card">
-      <div class="guide-card-head" onclick="toggleGuide(this)">
-        <span>📐 Kalkylatorn — Vad gör den och hur använder jag den?</span>
-        <span class="guide-faq-icon">›</span>
-      </div>
-      <div class="guide-card-body">
-        <p><strong>Vad det är:</strong> Kalkylatorn beräknar exakt hur mycket du kan tjäna som likviditetsgivare (LP) i en DeFi-pool, baserat på matematiken från Uniswap V3.</p>
-        <ul>
-          <li><strong>Par:</strong> Välj vilka två tokens du vill investera i. ETH/USDC är standardvalet — hög volym, etablerat protokoll.</li>
-          <li><strong>Risknivå:</strong> Bestämmer hur bred eller smal din prisrange är.
-            <ul>
-              <li>🛡️ <strong>Trygg:</strong> Bred range (±30%). Priset kan röra sig mycket utan att du lämnar rangen. Lägre avkastning men stabilare.</li>
-              <li>⚖️ <strong>Balanserad:</strong> Mellanting (±15%). Rekommenderas för de flesta.</li>
-              <li>🚀 <strong>Aggressiv:</strong> Smal range (±7%). Högst avkastning men kräver aktiv rebalansering.</li>
-            </ul>
-          </li>
-          <li><strong>Kapital:</strong> Hur mycket USD du vill investera.</li>
-          <li><strong>Tidshorisont:</strong> Hur länge du planerar att ha positionen.</li>
-          <li><strong>Kedja:</strong> Vilken blockchain. Arbitrum rekommenderas — låg gas, hög likviditet.</li>
-        </ul>
-        <div class="tip">💡 <strong>Tips:</strong> Börja med Balanserad risknivå och $5 000 för att lära dig hur det fungerar innan du ökar kapitalet.</div>
-        <p><strong>Varför netto-intäkt är lägre än APY:</strong> APY är beräknat på poolens totala likviditet. Vi beräknar din faktiska intäkt efter gas, rebalansering och management-avgifter.</p>
-      </div>
+      <h3>What is a Liquidity Pool?</h3>
+      <p>A liquidity pool is a smart contract that holds two tokens (e.g. ETH + USDC). When you deposit into a pool, you earn a share of all trading fees — this is your APY. The more people trade that pair, the more you earn.</p>
     </div>
-
     <div class="guide-card">
-      <div class="guide-card-head" onclick="toggleGuide(this)">
-        <span>🔥 Heta Pooler — Hur hittar jag de bästa poolerna?</span>
-        <span class="guide-faq-icon">›</span>
-      </div>
-      <div class="guide-card-body">
-        <p><strong>Vad det är:</strong> Live-data från DefiLlama med alla aktiva likviditetspooler sorterade efter APY (avkastning). Uppdateras i realtid.</p>
-        <ul>
-          <li><strong>Topptrio:</strong> De tre korten överst visar de pooler med högst APY just nu med minst $1M i TVL.</li>
-          <li><strong>Simulator:</strong> Klicka på en pool för att se exakt hur mycket du tjänar med ditt kapital.</li>
-          <li><strong>Öppna ↗:</strong> Tar dig direkt till rätt DEX (Uniswap, Orca, etc.) för att investera.</li>
-          <li><strong>Sökfält:</strong> Sök på par (ETH), protokoll (uniswap) eller kedja (arbitrum).</li>
-          <li><strong>Kedjefiltret:</strong> Visa bara pooler på en specifik blockchain.</li>
-        </ul>
-        <div class="tip">💡 <strong>Tips:</strong> Filtrera på Arbitrum och sortera på APY för att hitta de bästa ETH-poolerna med låg gas.</div>
-        <p><strong>Vad betyder 🔥 Hot?</strong> Poolen har ovanligt hög handelsvolym relativt TVL — det betyder att fee-intäkterna är extra höga just nu.</p>
-        <p><strong>Vad betyder Stabilitet-prickarna?</strong> 5 gröna prickar = hög TVL + etablerat protokoll = lägre risk. Välj alltid pooler med minst 3/5.</p>
-      </div>
+      <h3>Reading the Columns</h3>
+      <ul style="margin:8px 0;padding-left:20px;line-height:1.8">
+        <li><strong>APY</strong> — Annual Percentage Yield. How much you earn per year if the rate holds.</li>
+        <li><strong>TVL</strong> — Total Value Locked. How much money is in the pool. Higher = more liquid and generally safer.</li>
+        <li><strong>Protocol</strong> — Which DeFi platform the pool is on (e.g. Uniswap, Aave, Curve).</li>
+        <li><strong>Chain</strong> — Which blockchain (Ethereum, Arbitrum, Solana, etc.)</li>
+        <li><strong>Risk Score</strong> — DeFi Pro’s calculated risk rating. Lower = safer. Above 70 = high risk.</li>
+      </ul>
     </div>
-
     <div class="guide-card">
-      <div class="guide-card-head" onclick="toggleGuide(this)">
-        <span>📊 Marknad — Fear & Greed och marknadsöversikt</span>
-        <span class="guide-faq-icon">›</span>
-      </div>
-      <div class="guide-card-body">
-        <p><strong>Vad det är:</strong> En realtidsöversikt av kryptomarknadens sentiment och nyckeltal. Data från Alternative.me, CoinGecko och DefiLlama.</p>
-        <ul>
-          <li><strong>Fear & Greed Index (0–100):</strong>
-            <ul>
-              <li>🔴 0–24: Extrem rädsla → Historiskt ett köpläge</li>
-              <li>🟡 25–49: Rädsla → Marknaden är försiktig</li>
-              <li>⚪ 50: Neutralt</li>
-              <li>🟢 51–74: Girighet → Marknaden är optimistisk</li>
-              <li>🔴 75–100: Extrem girighet → Historiskt ett säljläge</li>
-            </ul>
-          </li>
-          <li><strong>BTC-dominans:</strong> Andel av total market cap som Bitcoin har. Hög dominans = pengar flödar till BTC (riskoff). Låg dominans = altcoins stiger (riskon).</li>
-          <li><strong>DeFi TVL:</strong> Totalt låst värde i DeFi. Stiger = fler investerar i DeFi = bra för LP-avkastning.</li>
-          <li><strong>Top 10 lista:</strong> Priser och 24h-förändring för de största kryptovalutorna.</li>
-        </ul>
-        <div class="tip">💡 <strong>Strategi:</strong> Investera i pooler när Fear &amp; Greed är under 30 (extrem rädsla) — priserna är lägre och APY tenderar vara högre eftersom volymen ökar vid volatilitet.</div>
-      </div>
-    </div>
-
-    <div class="guide-card">
-      <div class="guide-card-head" onclick="toggleGuide(this)">
-        <span>🎯 Avkastningsmål — Sätt ett mål och få en plan</span>
-        <span class="guide-faq-icon">›</span>
-      </div>
-      <div class="guide-card-body">
-        <p><strong>Vad det är:</strong> Du anger hur mycket du vill tjäna per månad — vi räknar ut exakt vilken strategi du behöver för att nå det.</p>
-        <ul>
-          <li><strong>Kapital:</strong> Hur mycket du kan investera.</li>
-          <li><strong>Önskat mål:</strong> T.ex. $500/månad. Använd slidern för att justera.</li>
-          <li><strong>Resultat:</strong> Du ser direkt vilken APR du behöver, om det är realistiskt, och vilka pooler som möter ditt mål.</li>
-          <li><strong>Realistisk bedömning:</strong>
-            <ul>
-              <li>✅ Under 10% APR: Uppnåeligt och säkert</li>
-              <li>👍 10–25% APR: Möjligt med aktiv LP-strategi</li>
-              <li>⚠️ 25–60% APR: Kräver tight range och frekvent rebalansering</li>
-              <li>🔴 Över 60% APR: Kräver extrem risktagning</li>
-            </ul>
-          </li>
-        </ul>
-        <div class="tip">💡 <strong>Realistiskt mål:</strong> Med $25 000 och 20% APR tjänar du ca $416/månad efter kostnader. Det kräver balanserad risknivå på ETH/USDC Arbitrum.</div>
-      </div>
-    </div>
-
-    <div class="guide-card">
-      <div class="guide-card-head" onclick="toggleGuide(this)">
-        <span>🏦 Aave — Övervaka dina utlåningspositioner</span>
-        <span class="guide-faq-icon">›</span>
-      </div>
-      <div class="guide-card-body">
-        <p><strong>Vad är Aave?</strong> Aave är ett decentraliserat lånprotokoll. Du kan låna ut krypto och tjäna ränta, eller låna mot säkerhet för att öka din exponering.</p>
-        <ul>
-          <li><strong>Hur du använder det i DeFi Pro:</strong> Klistra in din Ethereum-adress (0x...) → vi hämtar dina positioner automatiskt.</li>
-          <li><strong>Health Factor:</strong> Det viktigaste talet. Håll det alltid över 1.5.
-            <ul>
-              <li>🟢 Över 2.0: Mycket säker</li>
-              <li>🟡 1.5–2.0: OK men håll koll</li>
-              <li>🔴 Under 1.2: Risk för likvidation!</li>
-            </ul>
-          </li>
-          <li><strong>INSATT:</strong> Krypto du lånat ut → tjänar Supply APY.</li>
-          <li><strong>LÅNAT:</strong> Krypto du lånat → betalar Borrow APY.</li>
-        </ul>
-        <div class="tip">💡 <strong>Strategi:</strong> Lån ut stablecoins (USDC) på Aave och använd avkastningen som LP-kapital i Heta Pooler. Dubbel avkastning på samma kapital.</div>
-      </div>
-    </div>
-
-    <div class="guide-card">
-      <div class="guide-card-head" onclick="toggleGuide(this)">
-        <span>💼 Portfolio — Spåra dina positioner</span>
-        <span class="guide-faq-icon">›</span>
-      </div>
-      <div class="guide-card-body">
-        <p><strong>Vad det är:</strong> En tracker för dina LP-positioner. Ser direkt om din position är in-range (tjänar fees) eller ur range (tjänar ingenting).</p>
-        <ul>
-          <li><strong>Lägg till position:</strong> Ange namn, ingångspris, range (lågt/högt) och kapital.</li>
-          <li><strong>✓ In-range:</strong> Nuvarande pris är inom din range → du tjänar fees just nu.</li>
-          <li><strong>✗ Ur range:</strong> Priset har lämnat rangen → du tjänar inga fees! Dags att rebalansera.</li>
-        </ul>
-        <div class="tip">💡 <strong>Tips:</strong> Kontrollera dina positioner dagligen — speciellt med aggressiv risknivå. En ur-range position kostar dig inkomst varje dag.</div>
-      </div>
-    </div>
-
-    <div class="guide-card">
-      <div class="guide-card-head" onclick="toggleGuide(this)">
-        <span>🔔 Notiser — Automatisk prisövervakning</span>
-        <span class="guide-faq-icon">›</span>
-      </div>
-      <div class="guide-card-body">
-        <p><strong>Vad det är:</strong> Ställ in en prisrange → du får en notis om priset lämnar rangen. Så du aldrig missar när du behöver rebalansera.</p>
-        <ul>
-          <li><strong>Välj par:</strong> Vilket kryptovalutapar du vill övervaka.</li>
-          <li><strong>Nedre/övre gräns:</strong> Ange din range (samma som i kalkylatorn).</li>
-          <li><strong>Intervall:</strong> Hur ofta systemet kollar priset (var 5 minut rekommenderas).</li>
-          <li><strong>Starta:</strong> Godkänn notiser i webbläsaren → du får en push-notis om priset bryter ut.</li>
-        </ul>
-        <div class="tip">💡 <strong>OBS:</strong> Notiser kräver att fliken är öppen. Installera appen (dela → "Lägg till på hemskärm") för bakgrundsnotiser.</div>
-      </div>
+      <h3>⚠️ Risk Warning</h3>
+      <p>High APY does not mean safe. A pool offering 500% APY is almost always very risky. Stick to established protocols (Uniswap, Aave, Curve, Compound) with TVL above $1M when starting out.</p>
     </div>
   </div>
 
-  <!-- Ordlista -->
+  <!-- Alerts -->
   <div class="guide-section">
-    <h2>📝 Ordlista — Vanliga DeFi-termer förklarade</h2>
-    <div class="guide-glossary">
-      <div class="gloss-item"><div class="gloss-term">APY / APR</div><div class="gloss-def">Annual Percentage Yield/Rate. Årsavkastning i procent. APY inkluderar ränta-på-ränta, APR gör det inte. Vi visar APR för LP-positioner.</div></div>
-      <div class="gloss-item"><div class="gloss-term">Likviditetsgivare (LP)</div><div class="gloss-def">Du som sätter in pengar i en pool. Traders swappar mot din likviditet och du tjänar en liten fee per swap.</div></div>
-      <div class="gloss-item"><div class="gloss-term">Impermanent Loss (IL)</div><div class="gloss-def">Den potentiella förlust du får jämfört med att bara hålla tokens. Uppstår när priset rör sig mycket. Kallas "impermanent" eftersom den försvinner om priset återgår.</div></div>
-      <div class="gloss-item"><div class="gloss-term">Range / Prisrange</div><div class="gloss-def">Det prisintervall inom vilket du tjänar fees. Om priset går utanför rangen tjänar du ingenting tills priset är tillbaka.</div></div>
-      <div class="gloss-item"><div class="gloss-term">Rebalansering</div><div class="gloss-def">Flytta din position till en ny range som inkluderar nuvarande pris. Kostar gas men är nödvändigt om priset lämnat rangen.</div></div>
-      <div class="gloss-item"><div class="gloss-term">TVL (Total Value Locked)</div><div class="gloss-def">Totalt kapital inlåst i en pool eller ett protokoll. Hög TVL = mer likviditet = stabilare pool.</div></div>
-      <div class="gloss-item"><div class="gloss-term">Gas</div><div class="gloss-def">Transaktionsavgift på blockchain. Varierar per kedja: Ethereum ($50-100), Arbitrum ($1-5), Solana ($0.001).</div></div>
-      <div class="gloss-item"><div class="gloss-term">DEX</div><div class="gloss-def">Decentralized Exchange. En decentraliserad börs som Uniswap, Orca eller Cetus. Ingen central part kontrollerar dina pengar.</div></div>
-      <div class="gloss-item"><div class="gloss-term">Kapital-effektivitet</div><div class="gloss-def">Hur mycket mer fees du tjänar jämfört med en full-range LP. 5x = du tjänar 5 gånger mer fees per dollar investerat.</div></div>
-      <div class="gloss-item"><div class="gloss-term">Fear & Greed Index</div><div class="gloss-def">Marknadens känslomässiga tillstånd på en skala 0–100. Under 25 = extremt rädsla (potentiellt köpläge). Över 75 = extrem girighet (potentiellt säljläge).</div></div>
-      <div class="gloss-item"><div class="gloss-term">Concentrated Liquidity</div><div class="gloss-def">Uniswap V3-funktionen som låter dig sätta likviditet i ett specifikt prisintervall istället för 0 till oändlighet. Ökar din kapital-effektivitet massivt.</div></div>
-      <div class="gloss-item"><div class="gloss-term">Health Factor (Aave)</div><div class="gloss-def">Säkerhetsmått för dina lånade positioner i Aave. Under 1.0 = automatisk likvidation. Håll alltid över 1.5 för säkerhetsmarginal.</div></div>
+    <h2>🔔 Setting Up Price Alerts</h2>
+    <div class="guide-card">
+      <h3>How to Set an Alert</h3>
+      <ol style="margin:8px 0;padding-left:20px;line-height:1.8">
+        <li>Go to the <strong>Alerts</strong> tab.</li>
+        <li>Select a token (e.g. ETH).</li>
+        <li>Enter a minimum and/or maximum price.</li>
+        <li>Click <strong>Start alert</strong>.</li>
+        <li>You’ll get a browser notification when the price is triggered.</li>
+      </ol>
+    </div>
+    <div class="guide-card">
+      <h3>📱 Telegram Alerts</h3>
+      <p>To get alerts on your phone even when the app is closed, connect Telegram:</p>
+      <ol style="margin:8px 0;padding-left:20px;line-height:1.8">
+        <li>Open Telegram and search for <strong>@BotFather</strong>.</li>
+        <li>Type /newbot and follow the steps. You’ll get a <strong>Bot Token</strong>.</li>
+        <li>Start a chat with your bot, then visit <code>api.telegram.org/bot[TOKEN]/getUpdates</code> to find your <strong>Chat ID</strong>.</li>
+        <li>Enter both in the <strong>Agent</strong> tab under Telegram settings and click Save.</li>
+      </ol>
     </div>
   </div>
 
-  <!-- Vanliga frågor -->
+  <!-- Portfolio -->
   <div class="guide-section">
-    <h2>❓ Vanliga frågor</h2>
-
+    <h2>💼 Using the Portfolio Tracker</h2>
     <div class="guide-card">
-      <div class="guide-card-head" onclick="toggleGuide(this)">
-        <span>Kan jag förlora pengar på DeFi?</span>
-        <span class="guide-faq-icon">›</span>
-      </div>
-      <div class="guide-card-body">
-        <p>Ja. Det finns tre huvudrisker:</p>
-        <ul>
-          <li><strong>Impermanent Loss:</strong> Om priset rör sig mycket utanför din range kan du ha lägre värde än om du bara hållit tokens. Välj bred range för att minimera detta.</li>
-          <li><strong>Smart contract-risk:</strong> Protokollet kan hackas. Använd bara välkända, auditerade protokoll (Uniswap, Aave, Orca).</li>
-          <li><strong>Ur-range-risk:</strong> Om priset lämnar rangen tjänar du inga fees. Sätt notiser så du kan rebalansera i tid.</li>
-        </ul>
-        <div class="tip">💡 Börja alltid litet, lär dig hur det fungerar, öka sedan kapitalet.</div>
-      </div>
+      <h3>Adding a Position</h3>
+      <ol style="margin:8px 0;padding-left:20px;line-height:1.8">
+        <li>Go to the <strong>Portfolio</strong> tab.</li>
+        <li>Enter the token name (e.g. ETH).</li>
+        <li>Enter your entry price (the price you bought at).</li>
+        <li>Enter the low and high price of your range (for LP positions).</li>
+        <li>Enter your position size in USD.</li>
+        <li>Click <strong>Add</strong>.</li>
+      </ol>
+      <p>Your position is saved automatically and will be there next time you open the app.</p>
     </div>
-
     <div class="guide-card">
-      <div class="guide-card-head" onclick="toggleGuide(this)">
-        <span>Varför fungerar inte plånboksanslutningen?</span>
-        <span class="guide-faq-icon">›</span>
-      </div>
-      <div class="guide-card-body">
-        <p>Plånböcker som MetaMask kräver HTTPS för att injicera sin kod. Om du öppnar DeFi Pro som en lokal fil (file://) blockerar webbläsaren plånboksåtkomsten av säkerhetsskäl.</p>
-        <p><strong>Lösning 1 — Snabbast (30 sekunder):</strong></p>
-        <ol>
-          <li>Öppna Terminal / Kommandotolken</li>
-          <li>Navigera till mappen där HTML-filen finns: <code>cd ~/Downloads</code></li>
-          <li>Starta lokal server: <code>python3 -m http.server 8080</code></li>
-          <li>Öppna webbläsaren och gå till: <code>http://localhost:8080</code></li>
-        </ol>
-        <p><strong>Lösning 2 — Permanent:</strong> Hosta på GitHub Pages (gratis) → du får en riktig HTTPS-URL som fungerar var som helst.</p>
-        <div class="tip">💡 Du kan använda alla funktioner utan plånbok — kalkylatorn, simulatorn, marknadsdata och avkastningsmål fungerar utan anslutning.</div>
-      </div>
+      <h3>What is Impermanent Loss (IL)?</h3>
+      <p>When you provide liquidity in a pool, the ratio of your tokens changes as prices move. If you had just held the tokens instead, you might have more value — that difference is called <strong>impermanent loss</strong>. It’s called “impermanent” because if the price returns to your entry, the loss disappears. DeFi Pro estimates your IL automatically.</p>
     </div>
+  </div>
 
+  <!-- AI Agent -->
+  <div class="guide-section">
+    <h2>🤖 Using the AI Agent</h2>
     <div class="guide-card">
-      <div class="guide-card-head" onclick="toggleGuide(this)">
-        <span>Vilket par ska jag börja med?</span>
-        <span class="guide-faq-icon">›</span>
-      </div>
-      <div class="guide-card-body">
-        <p>Som nybörjare: <strong>ETH/USDC på Arbitrum</strong>. Anledningar:</p>
-        <ul>
-          <li>Hög volym = stabila fee-intäkter</li>
-          <li>ETH är välkänt och relativt stabilt</li>
-          <li>Arbitrum har låg gas ($2-5 per rebalans)</li>
-          <li>Bäst supportat av Uniswap V3 med djup likviditet</li>
-        </ul>
-        <p>När du lärt dig grunderna kan du prova SOL/USDC på Solana för ännu lägre gas och potentiellt högre APY.</p>
-      </div>
+      <h3>Step 1 — Scan</h3>
+      <p>Set your filters (min APY, max APY, min TVL, max risk score) and click <strong>🔍 Scan now</strong>. The agent fetches live pool data from DeFiLlama and filters it according to your settings.</p>
     </div>
-
     <div class="guide-card">
-      <div class="guide-card-head" onclick="toggleGuide(this)">
-        <span>Hur ofta behöver jag rebalansera?</span>
-        <span class="guide-faq-icon">›</span>
-      </div>
-      <div class="guide-card-body">
-        <ul>
-          <li>🛡️ <strong>Trygg (±30%):</strong> Ca 1 gång per månad vid normal volatilitet</li>
-          <li>⚖️ <strong>Balanserad (±15%):</strong> Ca 1–2 gånger per vecka</li>
-          <li>🚀 <strong>Aggressiv (±7%):</strong> Kan behövas dagligen vid hög volatilitet</li>
-        </ul>
-        <div class="tip">💡 Sätt upp prisnotiser i 🔔 Notiser-fliken — du får automatiskt en signal när det är dags att rebalansera.</div>
-      </div>
+      <h3>Step 2 — Analyse</h3>
+      <p>After scanning, click <strong>Analyse</strong>. This sends the results to Claude AI which reads through the pools and gives you a written analysis — what looks interesting, what risks to watch out for, and which pools may be worth researching further.</p>
+      <p style="margin-top:8px;color:var(--amber,#f59e0b)">⚠️ Requires a Claude API key from <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent)">console.anthropic.com</a>. Enter your key in the Agent tab.</p>
+    </div>
+    <div class="guide-card">
+      <h3>Auto-scan</h3>
+      <p>Click <strong>Start auto-scan</strong> to run the scanner automatically every few minutes. The agent will notify you via Telegram if it finds a pool matching your criteria.</p>
+    </div>
+  </div>
+
+  <!-- Glossary -->
+  <div class="guide-section">
+    <h2>📖 DeFi Glossary</h2>
+    <div class="guide-card">
+      <dl style="line-height:2">
+        <dt><strong>APY</strong></dt><dd>Annual Percentage Yield — your expected yearly return including compounding.</dd>
+        <dt><strong>APR</strong></dt><dd>Annual Percentage Rate — like APY but without compounding.</dd>
+        <dt><strong>TVL</strong></dt><dd>Total Value Locked — how much money is deposited in a protocol or pool.</dd>
+        <dt><strong>LP</strong></dt><dd>Liquidity Provider — someone who deposits tokens into a pool to earn fees.</dd>
+        <dt><strong>IL</strong></dt><dd>Impermanent Loss — the temporary loss from price divergence in an LP position.</dd>
+        <dt><strong>DEX</strong></dt><dd>Decentralised Exchange — a trading platform with no central authority (e.g. Uniswap).</dd>
+        <dt><strong>DeFi</strong></dt><dd>Decentralised Finance — financial services built on blockchain with no banks or middlemen.</dd>
+        <dt><strong>Smart Contract</strong></dt><dd>Self-executing code on a blockchain that automatically handles transactions.</dd>
+        <dt><strong>Gas</strong></dt><dd>The fee you pay to execute a transaction on a blockchain like Ethereum.</dd>
+        <dt><strong>Stablecoin</strong></dt><dd>A token pegged to a stable value, usually $1 (e.g. USDC, USDT, DAI).</dd>
+        <dt><strong>Yield Farming</strong></dt><dd>Moving funds between DeFi protocols to maximise returns.</dd>
+        <dt><strong>DYOR</strong></dt><dd>Do Your Own Research — always verify information before investing.</dd>
+      </dl>
     </div>
   </div>
 
   <!-- Disclaimer -->
-  <div class="warn-box">
-    ⚠️ <strong>Viktigt:</strong> DeFi Pro är ett analysverktyg, inte finansiell rådgivning. DeFi innebär alltid risk. Investera aldrig mer än du har råd att förlora. Gör alltid din egen research (DYOR) och verifiera all information med officiella protokollkällor innan du investerar.
+  <div class="guide-section">
+    <div class="guide-card" style="border-color:var(--red,#ef4444);opacity:.85">
+      <h3>⚠️ Important Disclaimer</h3>
+      <p>DeFi Pro is a tool for information and analysis only. Nothing on this platform is financial advice. DeFi investments carry significant risk including smart contract bugs, market volatility, and impermanent loss. Always do your own research (DYOR) and never invest more than you can afford to lose.</p>
+    </div>
   </div>
 
 </div><!-- end panel-guide -->
